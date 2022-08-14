@@ -1,0 +1,12 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: postgrest-cert-testnet
+spec:
+  secretName: postgrest-cert-testnet
+  issuerRef:
+    name: letsencrypt-prod
+    kind: ClusterIssuer
+  commonName: data.testnet.casperholders.com
+  dnsNames:
+    - data.testnet.casperholders.com

@@ -1,0 +1,11 @@
+resources:
+  - https.yml
+  - config.yml
+  - parserConfig.yml
+  - deployment.yml
+  - service.yml
+  - ingress.yml
+  - certificate.yml
+  - monitor.yml
+
+namespace: casperparser-testnet

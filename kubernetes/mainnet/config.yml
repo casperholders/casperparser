@@ -1,0 +1,28 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: casperparser-config
+data:
+  CASPER_PARSER_REDIS: "casperparser-redis-service:6379"
+  CASPER_PARSER_RPC: "http://rpc.casperholders.com/rpc"
+  CASPER_PARSER_DATABASE: "postgres://postgres@casperparser-db-service:5432/casperparser?sslmode=disable"
+  CASPER_PARSER_EVENT: "http://node.casperholders.com:9999/events/main"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgrest-config-testnet
+data:
+  PGRST_DB_URI: "postgres://postgres@casperparser-db-service:5432/casperparser"
+  PGRST_DB_SCHEMA: "public"
+  PGRST_DB_ANON_ROLE: "postgres"
+  OPENAPI_MODE: "ignore-privileges"
+  OPENAPI_SERVER_PROX_URI: "https://data.casperholders.com/swagger"
+  MAX_ROWS: "100"
+---
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: max-conns
+data:
+  max_conns.sql: "ALTER SYSTEM SET max_connections = 600;"

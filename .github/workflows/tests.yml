@@ -1,0 +1,55 @@
+name: tests
+
+on:
+  push:
+
+jobs:
+  container-job:
+    # Containers must run in Linux based operating systems
+    runs-on: ubuntu-latest
+    # Docker Hub image that `container-job` executes in
+    container: golang:1.18-bullseye
+
+    # Service containers to run with `container-job`
+    services:
+      # Label used to access the service container
+      postgres:
+        # Docker Hub image
+        image: postgres
+        # Provide the password for postgres
+        env:
+          POSTGRES_PASSWORD: myPassword
+          POSTGRES_DB: gotest
+          # Set health checks to wait until postgres has started
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      # Label used to access the service container
+      redis:
+        # Docker Hub image
+        image: redis
+        # Set health checks to wait until redis has started
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v3
+      - run: |
+          cat <<EOF > .env
+          CASPER_PARSER_REDIS=redis:6379
+          CASPER_PARSER_RPC=http://rpc.testnet.casperholders.com/rpc
+          CASPER_PARSER_DATABASE=postgres://postgres:myPassword@postgres:5432/gotest?sslmode=disable
+          CASPER_PARSER_EVENT=http://node.testnet.casperholders.com:9999/events/main
+          EOF
+      - run: make run_migrate
+      - run: make codecov
+      - uses: codecov/codecov-action@v3
+      - name: SonarCloud Scan
+        uses: sonarsource/sonarcloud-github-action@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}

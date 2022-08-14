@@ -1,0 +1,12 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: postgrest-cert
+spec:
+  secretName: postgrest-cert
+  issuerRef:
+    name: letsencrypt-prod
+    kind: ClusterIssuer
+  commonName: data.casperholders.com
+  dnsNames:
+    - data.casperholders.com

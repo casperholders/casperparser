@@ -1,0 +1,39 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgrest-service-testnet
+spec:
+  ports:
+    - name: web
+      port: 80
+      targetPort: 3000
+  selector:
+    app: postgrest-testnet
+status:
+  loadBalancer: { }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: casperparser-db-service-testnet
+spec:
+  ports:
+    - name: casperparser-db-service-testnet
+      protocol: TCP
+      port: 5432
+      targetPort: 5432
+  selector:
+    app: casperparser-db-testnet
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: casperparser-redis-service-testnet
+spec:
+  ports:
+    - name: casperparser-redis-service-testnet
+      protocol: TCP
+      port: 6379
+      targetPort: 6379
+  selector:
+    app: casperparser-redis-testnet

@@ -1,4 +1,6 @@
 resources:
+  - pv.yml
+  - pvc.yml
   - https.yml
   - config.yml
   - parserConfig.yml

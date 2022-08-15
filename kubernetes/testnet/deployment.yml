@@ -135,10 +135,15 @@ spec:
           volumeMounts:
             - name: max-conns
               mountPath: /docker-entrypoint-initdb.d
+            - name: casperparser-testnet-pg-volume
+              mountPath: /var/lib/postgresql/data
       volumes:
         - name: max-conns
           configMap:
             name: max-conns
+        - name: casperparser-testnet-pg-volume
+          persistentVolumeClaim:
+            claimName: casperparser-testnet-pg-volume
 ---
 apiVersion: apps/v1
 kind: Deployment

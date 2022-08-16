@@ -277,8 +277,34 @@ func (d Result) ParseArgs(strict bool, args []string) string {
 			return ""
 		}
 	}
+	contractHash := d.GetWriteContract()
+	if contractHash != "" {
+		retrievedArgs["contract_hash"] = contractHash
+	}
 	metadataString, _ := json.Marshal(retrievedArgs)
 	return string(metadataString)
+}
+
+// GetWriteContract retrieve written contract
+func (d Result) GetWriteContract() string {
+	var transforms *gabs.Container
+	if d.ExecutionResults[0].Result.Success != nil {
+		transforms = gabs.Wrap(d.ExecutionResults[0].Result.Success.Effect)
+	} else {
+		transforms = gabs.Wrap(d.ExecutionResults[0].Result.Failure.Effect)
+	}
+
+	for _, child := range transforms.S("transforms").Children() {
+		transform, ok := child.S("transform").Data().(string)
+		if ok && transform == "WriteContract" {
+			contractHash, found := child.S("key").Data().(string)
+			if found {
+				return contractHash
+			}
+			return ""
+		}
+	}
+	return ""
 }
 
 // GetEvents retrieve deploy events

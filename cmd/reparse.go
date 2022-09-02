@@ -41,7 +41,7 @@ func startReparse(redis asynq.RedisConnOpt) {
 	reparseDatabase = db.DB{Postgres: pgPool}
 	reparseClient = asynq.NewClient(redis)
 	defer reparseClient.Close()
-	const sql = `SELECT hash FROM deploys WHERE metadata IS NULL;`
+	const sql = `SELECT hash FROM deploys`
 
 	rows, err := reparseDatabase.Postgres.Query(context.Background(), sql)
 	if err != nil {

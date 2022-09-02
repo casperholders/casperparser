@@ -1,6 +1,7 @@
 package rpc
 
 import (
+	"log"
 	"math"
 	"testing"
 )
@@ -31,6 +32,30 @@ func TestClient_GetDeploy(t *testing.T) {
 		t.Errorf("Unable to retrieve deploy %s", err)
 	}
 	_, _, err = rpcClient.GetDeploy("wrongdeploy")
+	if err == nil {
+		t.Errorf("Should have thrown an error")
+	}
+}
+
+func TestClient_GetContractPackageHash(t *testing.T) {
+	_, err := rpcClient.GetContractPackage("394d973ba79e37a455f85fd2e4d7c138c4a6c1a4145fa087d25de59b4a088c6b")
+	if err != nil {
+		t.Errorf("Unable to retrieve contract package %s", err)
+	}
+	_, err = rpcClient.GetContractPackage("wronghash")
+	if err == nil {
+		t.Errorf("Should have thrown an error")
+	}
+}
+
+func TestClient_GetContract(t *testing.T) {
+	r, rr, err := rpcClient.GetContract("db3a41adea55e5ae65c8cba29d8e8527a16ac5fa998a76dfed553215e3254090")
+	log.Println(r)
+	log.Println(rr)
+	if err != nil {
+		t.Errorf("Unable to retrieve contract package %s", err)
+	}
+	_, _, err = rpcClient.GetContract("wronghash")
 	if err == nil {
 		t.Errorf("Should have thrown an error")
 	}

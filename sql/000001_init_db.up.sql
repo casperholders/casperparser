@@ -14,7 +14,6 @@ CREATE TABLE "raw_blocks"
     "data" jsonb NOT NULL
 );
 
-
 CREATE TABLE "deploys"
 (
     "hash"          VARCHAR(64) PRIMARY KEY,
@@ -25,14 +24,35 @@ CREATE TABLE "deploys"
     "block"         VARCHAR(64) NOT NULL,
     "type"          VARCHAR     NOT NULL,
     "metadata_type" VARCHAR     NOT NULL,
+    "contract_hash" VARCHAR(64),
+    "contract_name" VARCHAR,
+    "entrypoint"    VARCHAR,
     "metadata"      jsonb,
-    "events"      jsonb
+    "events"        jsonb
 );
 
 CREATE TABLE "raw_deploys"
 (
     "hash" VARCHAR(64) PRIMARY KEY,
     "data" jsonb NOT NULL
+);
+
+CREATE TABLE "contract_packages"
+(
+    "hash"   VARCHAR(64) PRIMARY KEY,
+    "deploy" VARCHAR(64),
+    "from"   VARCHAR(68),
+    "data"   jsonb NOT NULL
+);
+
+CREATE TABLE "contracts"
+(
+    "hash"    VARCHAR(64) PRIMARY KEY,
+    "package" VARCHAR(64) NOT NULL,
+    "deploy"  VARCHAR(64),
+    "from"    VARCHAR(68),
+    "type"    VARCHAR NOT NULL,
+    "data"    jsonb   NOT NULL
 );
 
 ALTER TABLE "deploys"
@@ -43,6 +63,9 @@ ALTER TABLE "blocks"
 
 ALTER TABLE "deploys"
     ADD FOREIGN KEY ("hash") REFERENCES "raw_deploys" ("hash");
+
+ALTER TABLE "contracts"
+    ADD FOREIGN KEY ("package") REFERENCES "contract_packages" ("hash");
 
 CREATE INDEX ON "deploys" ("block");
 CREATE INDEX ON "deploys" ("from");

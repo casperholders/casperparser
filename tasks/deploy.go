@@ -55,8 +55,24 @@ func HandleDeployRawTask(ctx context.Context, t *asynq.Task) error {
 	metadataDeployType, metadata := rpcDeploy.GetDeployMetadata()
 	events := rpcDeploy.GetEvents()
 	jsonString := strings.ReplaceAll(string(resp), "\\u0000", "")
+	contractHash, _ := rpcDeploy.GetStoredContractHash()
+	contractName := rpcDeploy.GetName()
+	entrypoint, _ := rpcDeploy.GetEntrypoint()
 	var database = db.DB{Postgres: WorkerPool}
-	err = database.InsertDeploy(ctx, rpcDeploy.Deploy.Hash, rpcDeploy.Deploy.Header.Account, cost, result, rpcDeploy.Deploy.Header.Timestamp, rpcDeploy.ExecutionResults[0].BlockHash, rpcDeploy.GetType(), jsonString, metadataDeployType, metadata, events)
+
+	writeContracts := rpcDeploy.GetWriteContract()
+
+	for _, writeContract := range writeContracts {
+		addContractToQueue(strings.ReplaceAll(writeContract, "hash-", ""), rpcDeploy.Deploy.Hash, rpcDeploy.Deploy.Header.Account)
+	}
+
+	writeContractPackages := rpcDeploy.GetWriteContractPackage()
+
+	for _, writeContractPackage := range writeContractPackages {
+		addContractPackageToQueue(strings.ReplaceAll(writeContractPackage, "hash-", ""), rpcDeploy.Deploy.Hash, rpcDeploy.Deploy.Header.Account)
+	}
+	metadata = strings.ReplaceAll(metadata, "\\u0000", "")
+	err = database.InsertDeploy(ctx, rpcDeploy.Deploy.Hash, rpcDeploy.Deploy.Header.Account, cost, result, rpcDeploy.Deploy.Header.Timestamp, rpcDeploy.ExecutionResults[0].BlockHash, rpcDeploy.GetType(), jsonString, metadataDeployType, contractHash, contractName, entrypoint, metadata, events)
 	if err != nil {
 		return err
 	}
@@ -83,14 +99,55 @@ func HandleDeployKnownTask(ctx context.Context, t *asynq.Task) error {
 	}
 	metadataDeployType, metadata := dbDeploy.GetDeployMetadata()
 	events := dbDeploy.GetEvents()
+
+	writeContracts := dbDeploy.GetWriteContract()
+
+	for _, writeContract := range writeContracts {
+		addContractToQueue(strings.ReplaceAll(writeContract, "hash-", ""), dbDeploy.Deploy.Hash, dbDeploy.Deploy.Header.Account)
+	}
+
+	writeContractPackages := dbDeploy.GetWriteContractPackage()
+
+	for _, writeContractPackage := range writeContractPackages {
+		addContractPackageToQueue(strings.ReplaceAll(writeContractPackage, "hash-", ""), dbDeploy.Deploy.Hash, dbDeploy.Deploy.Header.Account)
+	}
+
 	if metadata != "" {
 		log.Printf("New metadata found for %s of type : %s\n", p.DeployHash, metadataDeployType)
-		err = database.UpdateDeploy(ctx, dbDeploy.Deploy.Hash, dbDeploy.Deploy.Header.Account, cost, result, dbDeploy.Deploy.Header.Timestamp, dbDeploy.ExecutionResults[0].BlockHash, dbDeploy.GetType(), metadataDeployType, metadata, events)
+		contractHash, _ := dbDeploy.GetStoredContractHash()
+		contractName := dbDeploy.GetName()
+		entrypoint, _ := dbDeploy.GetEntrypoint()
+		metadata = strings.ReplaceAll(metadata, "\\u0000", "")
+		err = database.UpdateDeploy(ctx, dbDeploy.Deploy.Hash, dbDeploy.Deploy.Header.Account, cost, result, dbDeploy.Deploy.Header.Timestamp, dbDeploy.ExecutionResults[0].BlockHash, dbDeploy.GetType(), metadataDeployType, contractHash, contractName, entrypoint, metadata, events)
 		if err != nil {
 			return err
 		}
 	}
 	return nil
+}
+
+// addDeployToQueue a deploy hash to the queue
+func addContractToQueue(hash string, deployhash string, from string) {
+	task, err := NewContractRawTask(hash, deployhash, from)
+	if err != nil {
+		log.Fatalf("could not create task: %v", err)
+	}
+	_, err = WorkerAsyncClient.Enqueue(task, asynq.Queue("contracts"))
+	if err != nil {
+		log.Fatalf("could not enqueue task: %v", err)
+	}
+}
+
+// addDeployToQueue a deploy hash to the queue
+func addContractPackageToQueue(hash string, deployhash string, from string) {
+	task, err := NewContractPackageRawTask(hash, deployhash, from)
+	if err != nil {
+		log.Fatalf("could not create task: %v", err)
+	}
+	_, err = WorkerAsyncClient.Enqueue(task, asynq.Queue("contracts"))
+	if err != nil {
+		log.Fatalf("could not enqueue task: %v", err)
+	}
 }
 
 type DeployRawPayload struct {

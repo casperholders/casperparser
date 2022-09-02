@@ -3,7 +3,7 @@ package cmd
 
 import (
 	"casperParser/rpc"
-	"casperParser/types/deploy"
+	"casperParser/types/config"
 	"fmt"
 	"github.com/hibiken/asynq"
 	"github.com/markbates/pkger"
@@ -118,8 +118,8 @@ func initViper() error {
 			return err
 		}
 	}
-	dt := viper.Get("deploysTypes")
-	err := mapstructure.Decode(dt, &deploy.ConfDeployTypes)
+	dt := viper.Get("config")
+	err := mapstructure.Decode(dt, &config.ConfigParsed)
 	if err != nil {
 		log.Fatalf("Can't decode deploys config : %s\n", err)
 	}

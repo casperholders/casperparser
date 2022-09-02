@@ -4,6 +4,8 @@ package rpc
 import (
 	"bytes"
 	"casperParser/types/block"
+	"casperParser/types/contract"
+	"casperParser/types/contractPackage"
 	"casperParser/types/deploy"
 	"encoding/json"
 	"fmt"
@@ -81,7 +83,6 @@ func (c *Client) GetBlock(height int) (block.Result, json.RawMessage, error) {
 	if err != nil {
 		return block.Result{}, json.RawMessage{}, fmt.Errorf("failed to get result: %w", err)
 	}
-
 	return result, resp.Result, nil
 }
 
@@ -119,6 +120,62 @@ func (c *Client) GetDeploy(hash string) (deploy.Result, json.RawMessage, error) 
 	return result, resp.Result, nil
 }
 
+// GetContractPackage from the casper blockchain
+func (c *Client) GetContractPackage(hash string) (string, error) {
+	resp, err := c.RpcCall("chain_get_state_root_hash", nil)
+	if err != nil {
+		return "", err
+	}
+	var result stateRootHash
+	err = json.Unmarshal(resp.Result, &result)
+	if err != nil {
+		return "", fmt.Errorf("failed to get result: %w", err)
+	}
+
+	resp, err = c.RpcCall("state_get_item", []string{result.StateRootHash, "hash-" + hash})
+	if err != nil {
+		return "", err
+	}
+	var cp contractPackage.Result
+	err = json.Unmarshal(resp.Result, &cp)
+	if err != nil {
+		return "", err
+	}
+	b, err := json.Marshal(cp.StoredValue)
+	if err != nil {
+		return "", err
+	}
+	return string(b), nil
+}
+
+// GetContract from the casper blockchain
+func (c *Client) GetContract(hash string) (contract.Result, string, error) {
+	resp, err := c.RpcCall("chain_get_state_root_hash", nil)
+	if err != nil {
+		return contract.Result{}, "", err
+	}
+	var result stateRootHash
+	err = json.Unmarshal(resp.Result, &result)
+	if err != nil {
+		return contract.Result{}, "", fmt.Errorf("failed to get result: %w", err)
+	}
+
+	resp, err = c.RpcCall("state_get_item", []string{result.StateRootHash, "hash-" + hash})
+	if err != nil {
+		return contract.Result{}, "", err
+	}
+	var contractParsed contract.Result
+	err = json.Unmarshal(resp.Result, &contractParsed)
+	if err != nil {
+		return contract.Result{}, "", err
+	}
+	b, err := json.Marshal(contractParsed.StoredValue)
+	if err != nil {
+		return contract.Result{}, "", err
+	}
+	return contractParsed, string(b), nil
+}
+
 type Request struct {
 	Version string      `json:"jsonrpc"`
 	Id      string      `json:"id"`
@@ -143,4 +200,8 @@ type blockParams struct {
 type blockIdentifier struct {
 	Hash   string `json:"Hash,omitempty"`
 	Height uint64 `json:"Height,omitempty"`
+}
+
+type stateRootHash struct {
+	StateRootHash string `json:"state_root_hash"`
 }

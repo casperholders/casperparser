@@ -1,6 +1,7 @@
 package deploy
 
 import (
+	"casperParser/types/config"
 	"casperParser/utils"
 	"encoding/json"
 	"github.com/mitchellh/mapstructure"
@@ -21,9 +22,9 @@ func TestResult_GetDeployMetadata(t *testing.T) {
 	if err != nil {
 		t.Errorf("Unable to init viper : %s", err)
 	}
-	dt := viper.Get("deploysTypes")
+	dt := viper.Get("config")
 	log.Println(dt)
-	err = mapstructure.Decode(dt, &ConfDeployTypes)
+	err = mapstructure.Decode(dt, &config.ConfigParsed)
 	if err != nil {
 		t.Errorf("Unable to init deploy types from the config : %s", err)
 	}
@@ -56,8 +57,8 @@ func TestResult_GetDeployMetadata(t *testing.T) {
 			t.Errorf("Unable to unmarshal storedContractByNameDeploy deploy : %s", err)
 		}
 		deployType, metadata := deployResult.GetDeployMetadata()
-		if deployType != "faucet" || metadata != `{"amount":"1000000000000","target":"b497711627a79370e1b779dbae5970171c5fcccd3785f1e6593cea0ad6ec7bee"}` {
-			t.Errorf("storedContractByNameDeploy metadata bad parsing detected. Received : %s %s. Expected: %s %s", deployType, metadata, "faucet", `{"amount":"1000000000000","target":"b497711627a79370e1b779dbae5970171c5fcccd3785f1e6593cea0ad6ec7bee"}`)
+		if deployType != "call_faucet" || metadata != `{"amount":"1000000000000","target":"b497711627a79370e1b779dbae5970171c5fcccd3785f1e6593cea0ad6ec7bee"}` {
+			t.Errorf("storedContractByNameDeploy metadata bad parsing detected. Received : %s %s. Expected: %s %s", deployType, metadata, "call_faucet", `{"amount":"1000000000000","target":"b497711627a79370e1b779dbae5970171c5fcccd3785f1e6593cea0ad6ec7bee"}`)
 		}
 	})
 	t.Run("Should parse a storedVersionedContractByHashDeploy deploy", func(t *testing.T) {
@@ -67,8 +68,8 @@ func TestResult_GetDeployMetadata(t *testing.T) {
 			t.Errorf("Unable to unmarshal storedVersionedContractByHashDeploy deploy : %s", err)
 		}
 		deployType, metadata := deployResult.GetDeployMetadata()
-		if deployType != "cep47burn" || metadata != `{"owner":{"Account":"account-hash-f2d3278a8d24837f23156b812d72ab7ae5ea81467efe2fb718e292756c88cd76"},"token_ids":["26"]}` {
-			t.Errorf("storedVersionedContractByHashDeploy metadata bad parsing detected. Received : %s %s. Expected: %s %s", deployType, metadata, "cep47burn", `{"owner":"map[Account:account-hash-f2d3278a8d24837f23156b812d72ab7ae5ea81467efe2fb718e292756c88cd76]","token_ids":"[26]"}`)
+		if deployType != "burn" || metadata != `{"owner":{"Account":"account-hash-f2d3278a8d24837f23156b812d72ab7ae5ea81467efe2fb718e292756c88cd76"},"token_ids":["26"]}` {
+			t.Errorf("storedVersionedContractByHashDeploy metadata bad parsing detected. Received : %s %s. Expected: %s %s", deployType, metadata, "burn", `{"owner":"map[Account:account-hash-f2d3278a8d24837f23156b812d72ab7ae5ea81467efe2fb718e292756c88cd76]","token_ids":"[26]"}`)
 		}
 	})
 	t.Run("Should parse a storedVersionedContractByNameDeploy deploy", func(t *testing.T) {
@@ -78,8 +79,8 @@ func TestResult_GetDeployMetadata(t *testing.T) {
 			t.Errorf("Unable to unmarshal storedVersionedContractByNameDeploy deploy : %s", err)
 		}
 		deployType, metadata := deployResult.GetDeployMetadata()
-		if deployType != "unknown" || metadata != `` {
-			t.Errorf("storedVersionedContractByHashDeploy metadata bad parsing detected. Received : %s %s. Expected: %s %s", deployType, metadata, "unknown", ``)
+		if deployType != "check_balance_of" || metadata != `{"account":{"Account":"account-hash-a3aa343007ff3951f564a754cd3e2f31b2f7332788d02efe874584fbc49ca56d"},"id":"token2","token_contract":"521f4f0319b3f46e325fc09810644e8107c1886540ef996f79e94981f47b31b9"}` {
+			t.Errorf("storedVersionedContractByNameDeploy metadata bad parsing detected. Received : %s %s. Expected: %s %s", deployType, metadata, "check_balance_of", `{"account":{"Account":"account-hash-a3aa343007ff3951f564a754cd3e2f31b2f7332788d02efe874584fbc49ca56d"},"id":"token2","token_contract":"521f4f0319b3f46e325fc09810644e8107c1886540ef996f79e94981f47b31b9"}`)
 		}
 	})
 	t.Run("Should parse a moduleBytesDeploy deploy", func(t *testing.T) {

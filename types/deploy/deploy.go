@@ -2,6 +2,7 @@
 package deploy
 
 import (
+	"casperParser/types/config"
 	"encoding/json"
 	"fmt"
 	"github.com/Jeffail/gabs/v2"
@@ -9,9 +10,6 @@ import (
 	"math/big"
 	"strconv"
 )
-
-// ConfDeployTypes Represent all the types of deploys that will be parsed. This is initialized in the cmd/root.go file with Viper
-var ConfDeployTypes ConfigDeployTypes
 
 // GetDeployMetadata Retrieve deploy metadata
 func (d Result) GetDeployMetadata() (string, string) {
@@ -54,9 +52,11 @@ func (d Result) getTransferMetadata() (string, string) {
 
 // getModuleByteMetadata retrieve module bytes metadata
 func (d Result) getModuleByteMetadata() (string, string) {
-	for deployType, argConf := range ConfDeployTypes.ModuleBytes {
-		metadata := d.ParseArgs(argConf.StrictArgs, argConf.Args)
-		if metadata != "" {
+	deployArgs := d.MapArgs()
+	metadataString, _ := json.Marshal(deployArgs)
+	for deployType, argConf := range config.ConfigParsed.ModuleBytes {
+		ok := d.CheckArgs(argConf.StrictArgs, argConf.Args, deployArgs)
+		if ok {
 			resolvedDeployType := deployType
 			if resolvedDeployType == "stackingOperation" {
 				resolvedDeployType = "undelegate"
@@ -67,10 +67,10 @@ func (d Result) getModuleByteMetadata() (string, string) {
 					resolvedDeployType = "delegate"
 				}
 			}
-			return deployType, metadata
+			return resolvedDeployType, string(metadataString)
 		}
 	}
-	return "moduleBytes", ""
+	return "moduleBytes", string(metadataString)
 }
 
 // GetType retrieve the deploy session type
@@ -248,45 +248,47 @@ func (d Result) ParseStoredContract() (string, string) {
 		log.Println(e)
 		return "unknown", ""
 	}
-	for _, entrypoints := range ConfDeployTypes.StoredContracts {
-		if val, ok := entrypoints[entrypoint]; ok {
-			if val.HasName && val.ContractName != d.GetName() {
-				log.Println("has name but doesn't equal the current one")
-				return "unknown", ""
-			}
-			parsedArgs := d.ParseArgs(true, val.Args)
-			if parsedArgs != "" {
-				return val.DeployName, d.ParseArgs(true, val.Args)
-			}
-		}
-	}
-	return "unknown", ""
+	deployArgs := d.MapArgs()
+	metadataString, _ := json.Marshal(deployArgs)
+	return entrypoint, string(metadataString)
 }
 
-// ParseArgs parse the args of a deploy from the user defined configuration
-func (d Result) ParseArgs(strict bool, args []string) string {
-	deployArgs := d.MapArgs()
-	retrievedArgs := make(map[string]interface{})
+// CheckArgs check the args of a deploy against the user defined configuration
+func (d Result) CheckArgs(strict bool, args []string, deployArgs map[string]interface{}) bool {
 	if strict && len(deployArgs) != len(args) {
-		return ""
+		return false
 	}
 	for _, arg := range args {
-		if val, ok := deployArgs[arg]; ok {
-			retrievedArgs[arg] = val
-		} else if strict {
-			return ""
+		if _, ok := deployArgs[arg]; !ok && strict {
+			return false
 		}
 	}
-	contractHash := d.GetWriteContract()
-	if contractHash != "" {
-		retrievedArgs["contract_hash"] = contractHash
-	}
-	metadataString, _ := json.Marshal(retrievedArgs)
-	return string(metadataString)
+	return true
 }
 
 // GetWriteContract retrieve written contract
-func (d Result) GetWriteContract() string {
+func (d Result) GetWriteContract() []string {
+	var transforms *gabs.Container
+	if d.ExecutionResults[0].Result.Success != nil {
+		transforms = gabs.Wrap(d.ExecutionResults[0].Result.Success.Effect)
+	} else {
+		transforms = gabs.Wrap(d.ExecutionResults[0].Result.Failure.Effect)
+	}
+	var contracts []string
+	for _, child := range transforms.S("transforms").Children() {
+		transform, ok := child.S("transform").Data().(string)
+		if ok && transform == "WriteContract" {
+			contractHash, found := child.S("key").Data().(string)
+			if found {
+				contracts = append(contracts, contractHash)
+			}
+		}
+	}
+	return contracts
+}
+
+// GetWriteContractPackage retrieve written contract package
+func (d Result) GetWriteContractPackage() []string {
 	var transforms *gabs.Container
 	if d.ExecutionResults[0].Result.Success != nil {
 		transforms = gabs.Wrap(d.ExecutionResults[0].Result.Success.Effect)
@@ -294,17 +296,17 @@ func (d Result) GetWriteContract() string {
 		transforms = gabs.Wrap(d.ExecutionResults[0].Result.Failure.Effect)
 	}
 
+	var contractPackages []string
 	for _, child := range transforms.S("transforms").Children() {
 		transform, ok := child.S("transform").Data().(string)
-		if ok && transform == "WriteContract" {
+		if ok && transform == "WriteContractPackage" {
 			contractHash, found := child.S("key").Data().(string)
 			if found {
-				return contractHash
+				contractPackages = append(contractPackages, contractHash)
 			}
-			return ""
 		}
 	}
-	return ""
+	return contractPackages
 }
 
 // GetEvents retrieve deploy events
@@ -454,21 +456,10 @@ type TransferMetadata struct {
 	Target string `json:"target"`
 }
 
-type ConfigDeployTypes struct {
-	StoredContracts map[string]map[string]StoredContract
-	ModuleBytes     map[string]ModuleByte
-}
-
 type StoredContract struct {
 	DeployName   string
 	HasName      bool
 	Args         []string
 	ContractName string   `mapstructure:",omitempty"`
 	Events       []string `mapstructure:",omitempty"`
-}
-
-type ModuleByte struct {
-	StrictArgs bool
-	Args       []string
-	Events     []string `mapstructure:",omitempty"`
 }

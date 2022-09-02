@@ -13,6 +13,7 @@ import (
 	"github.com/jackc/pgx/v4/pgxpool"
 	"log"
 	"strconv"
+	"strings"
 )
 
 type DB struct {
@@ -48,6 +49,7 @@ func NewPGXPool(ctx context.Context, connString string, maxConnection int) (*pgx
 
 // InsertBlock in the database
 func (db *DB) InsertBlock(ctx context.Context, hash string, era int, timestamp string, height int, eraEnd bool, json string) error {
+	hash = strings.ToLower(hash)
 	err := db.InsertRawBlock(ctx, hash, json)
 	if err != nil {
 		return err
@@ -76,6 +78,7 @@ func (db *DB) InsertBlock(ctx context.Context, hash string, era int, timestamp s
 
 // InsertRawBlock in the database
 func (db *DB) InsertRawBlock(ctx context.Context, hash string, json string) error {
+	hash = strings.ToLower(hash)
 	const sql = `INSERT INTO raw_blocks ("hash", "data") 
 	VALUES ($1, $2)
 	ON CONFLICT (hash)
@@ -95,51 +98,20 @@ func (db *DB) InsertRawBlock(ctx context.Context, hash string, json string) erro
 }
 
 // InsertDeploy in the database
-func (db *DB) InsertDeploy(ctx context.Context, hash string, from string, cost string, result bool, timestamp string, block string, deployType string, json string, metadataType string, metadata string, events string) error {
+func (db *DB) InsertDeploy(ctx context.Context, hash string, from string, cost string, result bool, timestamp string, block string, deployType string, json string, metadataType string, contractHash string, contractName string, entrypoint string, metadata string, events string) error {
+	hash = strings.ToLower(hash)
 	err := db.InsertRawDeploy(ctx, hash, json)
 	if err != nil {
 		return err
 	}
-	const sql = `INSERT INTO deploys ("hash", "from", "cost", "result", "timestamp", "block", "type", "metadata_type", "metadata", "events")
-	VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-	ON CONFLICT (hash)
-	DO UPDATE
-	SET "from" = $2,
-	cost = $3,
-	result = $4,
-	timestamp = $5,
-	block = $6,
-	type = $7,
-	metadata_type = $8,
-	metadata = $9,
-	events = $10;`
-	var m *string
-	m = nil
-	if metadata != "" {
-		m = &metadata
-	}
-	var e *string
-	e = nil
-	if events != "" {
-		e = &events
-	}
-	switch _, err := db.Postgres.Exec(ctx, sql, hash, from, cost, result, timestamp, block, deployType, metadataType, m, e); {
-	case errors.Is(err, context.Canceled), errors.Is(err, context.DeadlineExceeded):
-		return err
-	case err != nil:
-		if sqlErr := db.blockPgError(err); sqlErr != nil {
-			return sqlErr
-		}
-		log.Printf("cannot create deploy on database: %v\n", err)
-		return errors.New("cannot create deploy on database")
-	}
-	return nil
+	return db.UpdateDeploy(ctx, hash, from, cost, result, timestamp, block, deployType, metadataType, contractHash, contractName, entrypoint, metadata, events)
 }
 
 // UpdateDeploy in the database
-func (db *DB) UpdateDeploy(ctx context.Context, hash string, from string, cost string, result bool, timestamp string, block string, deployType string, metadataType string, metadata string, events string) error {
-	const sql = `INSERT INTO deploys ("hash", "from", "cost", "result", "timestamp", "block", "type", "metadata_type", "metadata", "events")
-	VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+func (db *DB) UpdateDeploy(ctx context.Context, hash string, from string, cost string, result bool, timestamp string, block string, deployType string, metadataType string, contractHash string, contractName string, entrypoint string, metadata string, events string) error {
+	hash = strings.ToLower(hash)
+	const sql = `INSERT INTO deploys ("hash", "from", "cost", "result", "timestamp", "block", "type", "metadata_type", "contract_hash", "contract_name", "entrypoint", "metadata", "events")
+	VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
 	ON CONFLICT (hash)
 	DO UPDATE
 	SET "from" = $2,
@@ -149,8 +121,11 @@ func (db *DB) UpdateDeploy(ctx context.Context, hash string, from string, cost s
 	block = $6,
 	type = $7,
 	metadata_type = $8,
-	metadata = $9,
-	events = $10;`
+	contract_hash = $9,
+	contract_name = $10,
+	entrypoint = $11,
+	metadata = $12,
+	events = $13;`
 	var m *string
 	m = nil
 	if metadata != "" {
@@ -161,21 +136,37 @@ func (db *DB) UpdateDeploy(ctx context.Context, hash string, from string, cost s
 	if events != "" {
 		e = &events
 	}
-	switch _, err := db.Postgres.Exec(ctx, sql, hash, from, cost, result, timestamp, block, deployType, metadataType, m, e); {
+	var ch *string
+	ch = nil
+	if contractHash != "" {
+		ch = &contractHash
+	}
+	var cn *string
+	cn = nil
+	if contractName != "" {
+		cn = &contractName
+	}
+	var ep *string
+	ep = nil
+	if entrypoint != "" {
+		ep = &entrypoint
+	}
+	switch _, err := db.Postgres.Exec(ctx, sql, hash, from, cost, result, timestamp, block, deployType, metadataType, ch, cn, ep, m, e); {
 	case errors.Is(err, context.Canceled), errors.Is(err, context.DeadlineExceeded):
 		return err
 	case err != nil:
 		if sqlErr := db.blockPgError(err); sqlErr != nil {
 			return sqlErr
 		}
-		log.Printf("cannot update deploy on database: %v\n", err)
-		return errors.New("cannot update deploy on database")
+		log.Printf("cannot create/update deploy on database: %v\n", err)
+		return errors.New("cannot create/update deploy on database")
 	}
 	return nil
 }
 
 // InsertRawDeploy in the database
 func (db *DB) InsertRawDeploy(ctx context.Context, hash string, json string) error {
+	hash = strings.ToLower(hash)
 	const sql = `INSERT INTO raw_deploys ("hash", "data")
 	VALUES ($1, $2)
 	ON CONFLICT (hash)
@@ -194,10 +185,57 @@ func (db *DB) InsertRawDeploy(ctx context.Context, hash string, json string) err
 	return nil
 }
 
+// InsertContractPackage in the database
+func (db *DB) InsertContractPackage(ctx context.Context, hash string, deploy string, from string, data string) error {
+	hash = strings.ToLower(hash)
+	const sql = `INSERT INTO contract_packages ("hash", "deploy", "from", "data")
+	VALUES ($1, $2, $3, $4)
+	ON CONFLICT (hash)
+	DO UPDATE
+	SET deploy = $2,
+	"from" = $3,
+	data = $4;`
+	switch _, err := db.Postgres.Exec(ctx, sql, hash, deploy, from, data); {
+	case errors.Is(err, context.Canceled), errors.Is(err, context.DeadlineExceeded):
+		return err
+	case err != nil:
+		if sqlErr := db.blockPgError(err); sqlErr != nil {
+			return sqlErr
+		}
+		log.Printf("cannot create contract package on database: %v\n", err)
+		return errors.New("cannot create contract package on database")
+	}
+	return nil
+}
+
+// InsertContract in the database
+func (db *DB) InsertContract(ctx context.Context, hash string, packageHash string, deploy string, from string, contractType string, data string) error {
+	hash = strings.ToLower(hash)
+	const sql = `INSERT INTO contracts ("hash", "package", "deploy", "from", "type", "data")
+	VALUES ($1, $2, $3, $4, $5, $6)
+	ON CONFLICT (hash)
+	DO UPDATE
+	SET package = $2,
+	deploy = $3,    
+	"from" = $4,
+	type = $5,
+	data = $6;`
+	switch _, err := db.Postgres.Exec(ctx, sql, hash, packageHash, deploy, from, contractType, data); {
+	case errors.Is(err, context.Canceled), errors.Is(err, context.DeadlineExceeded):
+		return err
+	case err != nil:
+		if sqlErr := db.blockPgError(err); sqlErr != nil {
+			return sqlErr
+		}
+		log.Printf("cannot create contract on database: %v\n", err)
+		return errors.New("cannot create contract on database")
+	}
+	return nil
+}
+
 // GetMissingBlocks from the database
 func (db *DB) GetMissingBlocks(ctx context.Context) ([]int, error) {
 	const sql = `SELECT all_ids AS missing_ids FROM generate_series((SELECT MIN(height) FROM blocks), (SELECT MAX(height) FROM blocks)) all_ids EXCEPT SELECT height FROM blocks;`
-
 	rows, err := db.Postgres.Query(ctx, sql)
 	if err != nil {
 		return []int{}, err

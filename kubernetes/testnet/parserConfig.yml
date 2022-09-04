@@ -5,330 +5,166 @@ metadata:
 data:
   .casperParser.yaml: |
     concurrency: 100
-    deploysTypes:
-      storedContracts:
-        auction:
-          delegate:
-            deployName: "delegate"
-            hasName: false
-            args: [ "delegator", "validator", "amount" ]
-          undelegate:
-            deployName: "undelegate"
-            hasName: false
-            args: [ "delegator", "validator", "amount" ]
-          add_bid:
-            deployName: "addBid"
-            hasName: false
-            args: [ "public_key", "amount", "delegation_rate" ]
-          withdraw_bid:
-            deployName: "withdrawBid"
-            hasName: false
-            args: [ "public_key", "amount" ]
+    config:
+      contractTypes:
+        erc20:
+          entrypoints: #CasperERC20 Contract definition
+            - name: "name"
+              args: [ ]
+            - name: "symbol"
+              args: [ ]
+            - name: "transfer_from"
+              args: [ "owner", "recipient", "amount" ]
+            - name: "allowance"
+              args: [ "owner", "spender" ]
+            - name: "approve"
+              args: [ "spender", "amount" ]
+            - name: "transfer"
+              args: [ "recipient", "amount" ]
+            - name: "balance_of"
+              args: [ "address" ]
+            - name: "total_supply"
+              args: [ ]
+            - name: "decimals"
+              args: [ ]
+          namedkeys: [ "name", "symbol", "decimals", "balances", "allowances", "total_supply" ]
+        UniswapERC20:
+          entrypoints: #RengoLabsERC20 Contract definition
+            - name: "transfer"
+              args: [ "recipient", "amount" ]
+            - name: "transfer_from"
+              args: [ "owner", "recipient", "amount" ]
+            - name: "permit"
+              args: [ "public", "signature", "owner", "spender", "value", "deadline" ]
+            - name: "approve"
+              args: [ "spender", "amount" ]
+            - name: "balance_of"
+              args: [ "owner" ]
+            - name: "nonce"
+              args: [ "owner" ]
+            - name: "allowance"
+              args: [ "owner", "spender" ]
+            - name: "total_supply"
+              args: [ ]
+            - name: "mint"
+              args: [ "to", "amount" ]
+            - name: "burn"
+              args: [ "from", "amount" ]
+            - name: "name"
+              args: [ ]
+            - name: "symbol"
+              args: [ ]
+            - name: "increase_allowance"
+              args: [ "spender", "amount" ]
+            - name: "decrease_allowance"
+              args: [ "spender", "amount" ]
+            - name: "increase_allowance_js_client"
+              args: [ "spender", "amount" ]
+            - name: "decrease_allowance_js_client"
+              args: [ "spender", "amount" ]
+          namedkeys: [ "name", "symbol", "decimals", "balances", "allowances", "nonces", "total_supply", "domain_separator", "permit_type_hash" ]
         accountInfo:
-          set_url:
-            deployName: "accountInfo"
-            hasName: false
-            args: [ "url" ]
-        casperSign:
-          store_signature:
-            deployName: "casperSignContract"
-            hasName: true
-            contractName: "caspersign_contract"
-            args: [ ]
+          entrypoints: #AccountInfo Contract definition
+            - name: "burn_one_cspr"
+              args: [ ]
+            - name: "delete_url"
+              args: [ ]
+            - name: "delete_url_for_account"
+              args: [ "account" ]
+            - name: "disable_admin"
+              args: [ "account" ]
+            - name: "get_url"
+              args: [ "account" ]
+            - name: "set_cspr_to_burn"
+              args: [ "cspr_to_burn" ]
+            - name: "set_url"
+              args: [ "url" ]
+            - name: "set_url_for_account"
+              args: [ "account", "url" ]
+          namedkeys: [ "account-info-admins", "account-info-urls", "admins_count", "cspr_to_burn" ]
+        auction:
+          entrypoints: #Auction System Contract definition
+            - name: "activate_bid"
+              args: [ "validator_public_key" ]
+            - name: "add_bid"
+              args: [ "public_key", "delegation_rate", "amount" ]
+            - name: "delegate"
+              args: [ "delegator", "validator", "amount" ]
+            - name: "distribute"
+              args: [ "reward_factors" ]
+            - name: "get_era_validators"
+              args: [ ]
+            - name: "read_era_id"
+              args: [ ]
+            - name: "run_auction"
+              args: [ "era_end_timestamp_millis" ]
+            - name: "slash"
+              args: [ ]
+            - name: "undelegate"
+              args: [ "delegator", "validator", "amount" ]
+            - name: "withdraw_bid"
+              args: [ "public_key", "amount" ]
+          namedkeys: [ "auction_delay", "era_end_timestamp_millis", "era_id", "locked_funds_period", "seigniorage_recipients_snapshot", "unbonding_delay", "validator_slots" ]
         faucet:
-          call_faucet:
-            deployName: "faucet"
-            hasName: true
-            contractName: "faucet"
-            args: [ "target", "amount" ]
-        casperERC20:
-          transfer:
-            deployName: "erc20transfer"
-            hasName: false
-            args: [ "recipient", "amount" ]
-          transfer_from:
-            deployName: "erc20transferFrom"
-            hasName: false
-            args: [ "recipient", "owner", "amount" ]
-          approve:
-            deployName: "erc20approve"
-            hasName: false
-            args: [ "spender", "amount" ]
-        casperCEP47:
-          approve:
-            deployName: "cep47approve"
-            hasName: false
-            args: [ "spender", "token_ids" ]
-          mint:
-            deployName: "cep47mint"
-            hasName: false
-            args: [ "recipient", "token_ids", "token_metas" ]
-          mint_copies:
-            deployName: "cep47mint_copies"
-            hasName: false
-            args: [ "recipient", "token_ids", "token_metas", "count" ]
-          burn:
-            deployName: "cep47burn"
-            hasName: false
-            args: [ "owner", "token_ids" ]
-          transfer:
-            deployName: "cep47transfer"
-            hasName: false
-            args: [ "recipient", "token_ids" ]
-          transfer_token:
-            deployName: "cep47transfer"
-            hasName: false
-            args: [ "recipient", "token_id" ]
-          transfer_from:
-            deployName: "cep47transfer_from"
-            hasName: false
-            args: [ "recipient", "sender", "token_ids" ]
-          update_token_meta:
-            deployName: "cep47update_token_meta"
-            hasName: false
-            args: [ "token_id", "token_meta" ]
-        ipweNFT:
-          mint_one:
-            deployName: "ipwe_mint"
-            hasName: false
-            args: [ "recipient", "token_ids", "token_meta" ]
-          mint_many:
-            deployName: "ipwe_mint_many"
-            hasName: false
-            args: [ "recipient", "token_ids", "token_metas" ]
-          mint_copies:
-            deployName: "ipwe_mint_copies"
-            hasName: false
-            args: [ "recipient", "token_ids", "token_meta", "count" ]
-          burn_many:
-            deployName: "ipwe_burn_many"
-            hasName: false
-            args: [ "owner", "token_ids" ]
-          burn_one:
-            deployName: "ipwe_burn_many"
-            hasName: false
-            args: [ "owner", "token_id" ]
-          transfer_token:
-            deployName: "ipwe_transfer_token"
-            hasName: false
-            args: [ "recipient", "sender", "token_id" ]
-          transfer_many_tokens:
-            deployName: "ipwe_transfer_many_tokens"
-            hasName: false
-            args: [ "recipient", "sender", "token_ids" ]
-          update_token_metadata:
-            deployName: "ipwe_update_token_metadata"
-            hasName: false
-            args: [ "token_id", "meta" ]
-        ipweNFT825:
-          mint_one:
-            deployName: "ipwe_mint"
-            hasName: false
-            args: [ "recipient", "token_id", "token_meta" ]
-          update_token_metadata:
-            deployName: "ipwe_update_token_metadata"
-            hasName: false
-            args: [ "token_id", "token_meta" ]
-        civic:
-          mint:
-            deployName: "civic_mint"
-            hasName: false
-            args: [ "recipient", "token_id", "token_meta" ]
-          update_token_meta:
-            deployName: "civic_update_token_meta"
-            hasName: false
-            args: [ "token_id", "token_meta_key", "token_meta_value" ]
-        rengoERC20:
-          mint:
-            deployName: "rengoERC20mint"
-            hasName: false
-            args: [ "to", "amount" ]
-          increase_allowance:
-            deployName: "rengoERC20increase_allowance"
-            hasName: false
-            args: [ "spender", "amount" ]
-          decrease_allowance:
-            deployName: "rengoERC20decrease_allowance"
-            hasName: false
-            args: [ "spender", "amount" ]
-        friendlyMarket:
-          add_liquidity_cspr:
-            deployName: "fm_add_liquidity_cspr"
-            hasName: false
-            args: [ "token", "amount_token_desired", "amount_cspr_desired", "amount_token_min", "amount_cspr_min", "to", "deadline", "src_purse", "target_account" ]
-          add_liquidity:
-            deployName: "fm_add_liquidity"
-            hasName: false
-            args: [ "token_a", "token_b", "amount_a_desired", "amount_b_desired", "amount_a_min", "amount_b_min", "to", "deadline" ]
-          swap_exact_cspr_for_tokens:
-            deployName: "fm_swap_exact_cspr_for_tokens"
-            hasName: false
-            args: [ "amount_in", "amount_out_min", "path", "to", "deadline", "src_purse" ]
-          swap_cspr_for_exact_tokens:
-            deployName: "fm_swap_cspr_for_exact_tokens"
-            hasName: false
-            args: [ "amount_out", "amount_in_max", "path", "deadline", "target_account", "src_purse", "to" ]
-          swap_exact_tokens_for_tokens:
-            deployName: "fm_swap_exact_tokens_for_tokens"
-            hasName: false
-            args: [ "amount_in", "amount_out_min", "path", "to", "deadline" ]
-          swap_exact_tokens_for_cspr:
-            deployName: "fm_swap_exact_tokens_for_cspr"
-            hasName: false
-            args: [ "amount_in", "amount_out_min", "path", "to", "deadline", "amount", "target", "id", "target_account" ]
-          remove_liquidity_cspr:
-            deployName: "fm_remove_liquidity_cspr"
-            hasName: false
-            args: [ "to", "deadline", "liquidity", "token", "amount_token_min", "amount_cspr_min", "target_account" ]
-          remove_liquidity:
-            deployName: "fm_remove_liquidity"
-            hasName: false
-            args: [ "to", "deadline", "liquidity", "token_a", "token_b", "amount_a_min", "amount_b_min" ]
-        friendlyMarketV11:
-          swap_exact_tokens_for_cspr:
-            deployName: "fm_swap_exact_tokens_for_cspr"
-            hasName: false
-            args: [ "amount_in", "amount_out_min", "path", "to", "deadline", "target_account" ]
-        swappery:
-          add_liquidity:
-            deployName: "swappery_add_liquidity"
-            hasName: false
-            args: [ "token0", "token1", "amount0_desired", "amount1_desired", "amount0_min", "amount1_min", "to", "dead_line" ]
-          create_pair:
-            deployName: "swappery_create_pair"
-            hasName: false
-            args: [ "token0", "token1", "pair" ]
-          remove_liquidity:
-            deployName: "swappery_remove_liquidity"
-            hasName: false
-            args: [ "token0", "token1", "liquidity", "amount0_min", "amount1_min", "to", "dead_line" ]
-          swap_exact_tokens_for_tokens:
-            deployName: "swappery_swap_exact_tokens_for_tokens"
-            hasName: false
-            args: [ "amount_in", "amount_out_min", "path", "to" ]
-          swap_tokens_for_exact_tokens:
-            deployName: "swappery_swap_tokens_for_exact_tokens"
-            hasName: false
-            args: [ "amount_out", "amount_in_max", "path", "to" ]
-        friendlyMarketCustomERC20:
-          deposit:
-            deployName: "fm_deposit_custom_erc20"
-            hasName: false
-            args: [ "amount", "src_purse" ]
-          withdraw:
-            deployName: "fm_withdraw_custom_erc20"
-            hasName: false
-            args: [ "amount", "target_account" ]
-        friendlyMarketAuction:
-          list_for_fixed_price:
-            deployName: "fm_auction_list_for_fixed_price"
-            hasName: false
-            args: [ "token_id", "token_key", "recipient_account_hash", "start_date", "expiry_date", "payment_token_key", "price", "specific_buyers" ]
-          list_for_auction:
-            deployName: "fm_auction_list_for_auction"
-            hasName: false
-            args: [ "token_id", "token_key", "recipient_account_hash", "start_date", "expiry_date", "payment_token_key", "initial_price" ]
-          offer:
-            deployName: "fm_auction_offer"
-            hasName: false
-            args: [ "token_id", "token_key", "deadline", "price", "payment_token_key" ]
-          withdraw_offer:
-            deployName: "fm_auction_withdraw_offer"
-            hasName: false
-            args: [ "offer_dict_key" ]
-          buy:
-            deployName: "fm_auction_buy"
-            hasName: false
-            args: [ "listing_id" ]
-          bid:
-            deployName: "fm_auction_bid"
-            hasName: false
-            args: [ "auction_id", "price" ]
-          add_payment_token:
-            deployName: "fm_auction_add_payment_token"
-            hasName: false
-            args: [ "new_payment_token" ]
-          add_payment_tokens:
-            deployName: "fm_auction_add_payment_tokens"
-            hasName: false
-            args: [ "payment_tokens" ]
-          end_auction:
-            deployName: "fm_auction_end_auction"
-            hasName: false
-            args: [ "auction_id" ]
-          claim_auction_results:
-            deployName: "fm_auction_claim_auction_results"
-            hasName: false
-            args: [ "auction_id" ]
-          unlist_auction:
-            deployName: "fm_auction_unlist_auction"
-            hasName: false
-            args: [ "auction_id" ]
-          unlist_fixed_price:
-            deployName: "fm_auction_unlist_fixed_price"
-            hasName: false
-            args: [ "listing_id" ]
-        friendlyMarketLotery:
-          close_lottery:
-            deployName: "fm_close_lottery"
-            hasName: false
-            args: [ "lottery_id" ]
-          start_lottery:
-            deployName: "fm_start_lottery"
-            hasName: false
-            args: [ "end_time", "price_ticket_in_cake", "discount_divisor", "rewards_breakdown", "treasury_fee" ]
-          buy_tickets:
-            deployName: "fm_buy_tickets"
-            hasName: false
-            args: [ "lottery_id", "ticket_numbers" ]
-          draw_final_number_and_make_lottery_claimable:
-            deployName: "fm_draw_final_number_and_make_lottery_claimable"
-            hasName: false
-            args: [ "lottery_id", "auto_injection" ]
-          claim_tickets:
-            deployName: "fm_claim_tickets"
-            hasName: false
-            args: [ "lottery_id", "ticket_ids", "brackets" ]
-        lockUnlockCspr:
-          unlock_cspr:
-            deployName: "unlock_cspr_bsc"
-            hasName: false
-            args: [ "receipient_publickey", "bsc_transaction_hash", "amount" ]
-          lock_cspr:
-            deployName: "lock_cspr_bsc"
-            hasName: false
-            args: [ "bsc_recipient_address", "amount" ]
-        casperPrivateAuction:
-          bid:
-            deployName: "casper_private_auction_bid"
-            hasName: false
-            args: [ "bid", "bid_purse" ]
-          finalize:
-            deployName: "casper_private_auction_finalize"
-            hasName: false
-            args: [ ]
-        casperCEP78:
-          mint:
-            deployName: "casperCEP78_mint"
-            hasName: false
-            args: [ "token_owner", "token_meta_data" ]
-          burn:
-            deployName: "casperCEP78_burn"
-            hasName: false
-            args: [ "token_id", "token_hash" ]
-          approve:
-            deployName: "casperCEP78_approve"
-            hasName: false
-            args: [ "token_id", "token_hash", "operator" ]
-          transfer:
-            deployName: "casperCEP78_transfer"
-            hasName: false
-            args: [ "token_id", "token_hash", "source_key", "target_key" ]
-          set_variables:
-            deployName: "casperCEP78_set_variables"
-            hasName: false
-            args: [ "allow_minting", "contract_whitelist" ]
+          entrypoints: #Faucet Testnet contract
+            - name: "call_faucet"
+              args: [ "target", "amount" ]
+          namedkeys: [ ]
+        NFTCEP47:
+          entrypoints: #NFTCEP47 Contract definition
+            - name: "name"
+              args: [ ]
+            - name: "symbol"
+              args: [ ]
+            - name: "meta"
+              args: [ ]
+            - name: "total_supply"
+              args: [ ]
+            - name: "balance_of"
+              args: [ "owner" ]
+            - name: "owner_of"
+              args: [ "token_id" ]
+            - name: "token_meta"
+              args: [ "token_id" ]
+            - name: "update_token_meta"
+              args: [ "token_id", "token_meta" ]
+            - name: "mint"
+              args: [ "recipient", "token_ids", "token_metas" ]
+            - name: "mint_copies"
+              args: [ "recipient", "token_ids", "token_meta", "count" ]
+            - name: "burn"
+              args: [ "owner", "token_ids" ]
+            - name: "transfer"
+              args: [ "recipient", "token_ids" ]
+            - name: "transfer_from"
+              args: [ "sender", "recipient", "token_ids" ]
+            - name: "approve"
+              args: [ "spender", "token_ids" ]
+            - name: "get_approved"
+              args: [ "owner", "token_id" ]
+            - name: "get_token_by_index"
+              args: [ "owner", "index" ]
+          namedkeys: [ "name", "symbol", "balances", "meta", "total_supply", "owners", "owned_tokens_by_index", "owned_indexes_by_token", "balances", "metadata", "allowances" ]
+        CasperPrivateAuction:
+          entrypoints: #CasperPrivateAuction Contract definition
+            - name: "bid"
+              args: [ "bid", "bid_purse" ]
+            - name: "cancel_bid"
+              args: [ ]
+            - name: "finalize"
+              args: [ ]
+            - name: "cancel_auction"
+              args: [ ]
+            - name: "get_bid"
+              args: [ ]
+            - name: "init"
+              args: [ ]
+          namedkeys: [ "token_owner", "beneficiary_account", "token_contract_hash", "kyc_package_hash", "english_format", "token_id", "start_time", "cancellation_time", "end_time", "starting_price", "reserve_price", "winning_bid", "current_winner", "finalized", "auction_events_count", "commissions", "bidder_count_cap", "auction_timer_extension", "minimum_bid_step", "marketplace_commission", "marketplace_account", "auction_purse" ]
       moduleBytes:
+        faucet:
+          strictArgs: true
+          args: [ "target", "amount" ]
+          from: "018afa98ca4be12d613617f7339a2d576950a2f9a92102ca4d6508ee31b54d2c02"
         stackingOperation:
           strictArgs: true
           args: [ "delegator", "validator", "amount" ]

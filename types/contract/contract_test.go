@@ -21,6 +21,6 @@ func TestResult_GetContractType(t *testing.T) {
 	log.Println(dt)
 	err = mapstructure.Decode(dt, &config.ConfigParsed)
 	log.Println(config.ConfigParsed)
-	r, _, err := rpcClient.GetContract("31bfdc9591902bda8f921d6c31f3e974bda18ec5614222f3bec55390decd05a0")
-	println(r.GetContractType())
+	r, err := rpcClient.GetContract("31bfdc9591902bda8f921d6c31f3e974bda18ec5614222f3bec55390decd05a0")
+	println(r.GetContractTypeAndScore())
 }

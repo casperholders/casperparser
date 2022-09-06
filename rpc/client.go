@@ -149,31 +149,27 @@ func (c *Client) GetContractPackage(hash string) (string, error) {
 }
 
 // GetContract from the casper blockchain
-func (c *Client) GetContract(hash string) (contract.Result, string, error) {
+func (c *Client) GetContract(hash string) (contract.Result, error) {
 	resp, err := c.RpcCall("chain_get_state_root_hash", nil)
 	if err != nil {
-		return contract.Result{}, "", err
+		return contract.Result{}, err
 	}
 	var result stateRootHash
 	err = json.Unmarshal(resp.Result, &result)
 	if err != nil {
-		return contract.Result{}, "", fmt.Errorf("failed to get result: %w", err)
+		return contract.Result{}, fmt.Errorf("failed to get result: %w", err)
 	}
 
 	resp, err = c.RpcCall("state_get_item", []string{result.StateRootHash, "hash-" + hash})
 	if err != nil {
-		return contract.Result{}, "", err
+		return contract.Result{}, err
 	}
 	var contractParsed contract.Result
 	err = json.Unmarshal(resp.Result, &contractParsed)
 	if err != nil {
-		return contract.Result{}, "", err
+		return contract.Result{}, err
 	}
-	b, err := json.Marshal(contractParsed.StoredValue)
-	if err != nil {
-		return contract.Result{}, "", err
-	}
-	return contractParsed, string(b), nil
+	return contractParsed, nil
 }
 
 type Request struct {

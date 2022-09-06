@@ -8,7 +8,9 @@ import (
 	"github.com/Jeffail/gabs/v2"
 	"log"
 	"math/big"
+	"regexp"
 	"strconv"
+	"strings"
 )
 
 // GetDeployMetadata Retrieve deploy metadata
@@ -307,6 +309,35 @@ func (d Result) GetWriteContractPackage() []string {
 		}
 	}
 	return contractPackages
+}
+
+// GetURef retrieve uref transform in the deploy
+func (d Result) MapUrefs() map[string]interface{} {
+	var transforms *gabs.Container
+	if d.ExecutionResults[0].Result.Success != nil {
+		transforms = gabs.Wrap(d.ExecutionResults[0].Result.Success.Effect)
+	} else {
+		transforms = gabs.Wrap(d.ExecutionResults[0].Result.Failure.Effect)
+	}
+	accessRights := regexp.MustCompile(`-\d{3}$`)
+	values := make(map[string]interface{})
+	for _, child := range transforms.S("transforms").Children() {
+		key, ok := child.S("key").Data().(string)
+		if ok && strings.Contains(key, "uref-") {
+			parsed, okCLValue := child.S("transform", "WriteCLValue", "parsed").Data().(interface{})
+			if okCLValue {
+				urefHash := accessRights.ReplaceAllString(key, "")
+				values[urefHash] = getValue(parsed)
+			}
+		}
+		if ok && strings.Contains(key, "balance-") {
+			parsed, okCLValue := child.S("transform", "WriteCLValue", "parsed").Data().(interface{})
+			if okCLValue {
+				values[key] = getValue(parsed)
+			}
+		}
+	}
+	return values
 }
 
 // GetEvents retrieve deploy events

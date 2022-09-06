@@ -99,19 +99,6 @@ func HandleDeployKnownTask(ctx context.Context, t *asynq.Task) error {
 	}
 	metadataDeployType, metadata := dbDeploy.GetDeployMetadata()
 	events := dbDeploy.GetEvents()
-
-	writeContracts := dbDeploy.GetWriteContract()
-
-	for _, writeContract := range writeContracts {
-		addContractToQueue(strings.ReplaceAll(writeContract, "hash-", ""), dbDeploy.Deploy.Hash, dbDeploy.Deploy.Header.Account)
-	}
-
-	writeContractPackages := dbDeploy.GetWriteContractPackage()
-
-	for _, writeContractPackage := range writeContractPackages {
-		addContractPackageToQueue(strings.ReplaceAll(writeContractPackage, "hash-", ""), dbDeploy.Deploy.Hash, dbDeploy.Deploy.Header.Account)
-	}
-
 	if metadata != "" {
 		log.Printf("New metadata found for %s of type : %s\n", p.DeployHash, metadataDeployType)
 		contractHash, _ := dbDeploy.GetStoredContractHash()
@@ -121,6 +108,17 @@ func HandleDeployKnownTask(ctx context.Context, t *asynq.Task) error {
 		err = database.UpdateDeploy(ctx, dbDeploy.Deploy.Hash, dbDeploy.Deploy.Header.Account, cost, result, dbDeploy.Deploy.Header.Timestamp, dbDeploy.ExecutionResults[0].BlockHash, dbDeploy.GetType(), metadataDeployType, contractHash, contractName, entrypoint, metadata, events)
 		if err != nil {
 			return err
+		}
+		writeContractPackages := dbDeploy.GetWriteContractPackage()
+
+		for _, writeContractPackage := range writeContractPackages {
+			addContractPackageToQueue(strings.ReplaceAll(writeContractPackage, "hash-", ""), dbDeploy.Deploy.Hash, dbDeploy.Deploy.Header.Account)
+		}
+
+		writeContracts := dbDeploy.GetWriteContract()
+
+		for _, writeContract := range writeContracts {
+			addContractToQueue(strings.ReplaceAll(writeContract, "hash-", ""), dbDeploy.Deploy.Hash, dbDeploy.Deploy.Header.Account)
 		}
 	}
 	return nil

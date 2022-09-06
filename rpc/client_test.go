@@ -49,13 +49,12 @@ func TestClient_GetContractPackageHash(t *testing.T) {
 }
 
 func TestClient_GetContract(t *testing.T) {
-	r, rr, err := rpcClient.GetContract("db3a41adea55e5ae65c8cba29d8e8527a16ac5fa998a76dfed553215e3254090")
+	r, err := rpcClient.GetContract("db3a41adea55e5ae65c8cba29d8e8527a16ac5fa998a76dfed553215e3254090")
 	log.Println(r)
-	log.Println(rr)
 	if err != nil {
 		t.Errorf("Unable to retrieve contract package %s", err)
 	}
-	_, _, err = rpcClient.GetContract("wronghash")
+	_, err = rpcClient.GetContract("wronghash")
 	if err == nil {
 		t.Errorf("Should have thrown an error")
 	}

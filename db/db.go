@@ -209,18 +209,19 @@ func (db *DB) InsertContractPackage(ctx context.Context, hash string, deploy str
 }
 
 // InsertContract in the database
-func (db *DB) InsertContract(ctx context.Context, hash string, packageHash string, deploy string, from string, contractType string, data string) error {
+func (db *DB) InsertContract(ctx context.Context, hash string, packageHash string, deploy string, from string, contractType string, score float64, data string) error {
 	hash = strings.ToLower(hash)
-	const sql = `INSERT INTO contracts ("hash", "package", "deploy", "from", "type", "data")
-	VALUES ($1, $2, $3, $4, $5, $6)
+	const sql = `INSERT INTO contracts ("hash", "package", "deploy", "from", "type", "score", "data")
+	VALUES ($1, $2, $3, $4, $5, $6, $7)
 	ON CONFLICT (hash)
 	DO UPDATE
 	SET package = $2,
 	deploy = $3,    
 	"from" = $4,
 	type = $5,
-	data = $6;`
-	switch _, err := db.Postgres.Exec(ctx, sql, hash, packageHash, deploy, from, contractType, data); {
+	score = $6,
+	data = $7;`
+	switch _, err := db.Postgres.Exec(ctx, sql, hash, packageHash, deploy, from, contractType, score, data); {
 	case errors.Is(err, context.Canceled), errors.Is(err, context.DeadlineExceeded):
 		return err
 	case err != nil:
@@ -337,7 +338,7 @@ func (db *DB) GetRawBlock(ctx context.Context, hash string) (block.Result, error
 // CountDeploys from the database
 func (db *DB) CountDeploys(ctx context.Context, hashes []string) (int, error) {
 	var paramrefs string
-	for i, _ := range hashes {
+	for i := range hashes {
 		paramrefs += `$` + strconv.Itoa(i+1) + `,`
 	}
 	paramrefs = paramrefs[:len(paramrefs)-1] // remove last ","

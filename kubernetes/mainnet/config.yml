@@ -15,10 +15,10 @@ metadata:
 data:
   PGRST_DB_URI: "postgres://postgres@casperparser-db-service:5432/casperparser"
   PGRST_DB_SCHEMA: "public"
-  PGRST_DB_ANON_ROLE: "postgres"
-  OPENAPI_MODE: "ignore-privileges"
-  OPENAPI_SERVER_PROX_URI: "https://data.casperholders.com/swagger"
-  MAX_ROWS: "100"
+  PGRST_DB_ANON_ROLE: "web_anon"
+  PGRST_OPENAPI_MODE: "ignore-privileges"
+  PGRST_OPENAPI_SERVER_PROX_URI: "https://data.casperholders.com/swagger"
+  PGRST_DB_MAX_ROWS: "100"
 ---
 kind: ConfigMap
 apiVersion: v1

@@ -3,10 +3,13 @@ package tasks
 
 import (
 	"casperParser/db"
+	"casperParser/types/contract"
+	"casperParser/types/deploy"
 	"context"
 	"encoding/json"
 	"fmt"
 	"github.com/hibiken/asynq"
+	"regexp"
 	"strings"
 )
 
@@ -31,18 +34,47 @@ func HandleContractRawTask(ctx context.Context, t *asynq.Task) error {
 		return fmt.Errorf("json.Unmarshal failed: %v: %w", err, asynq.SkipRetry)
 	}
 
-	contract, rawContractHash, err := WorkerRpcClient.GetContract(strings.ToLower(p.ContractHash))
+	contractParsed, err := WorkerRpcClient.GetContract(strings.ToLower(p.ContractHash))
 	if err != nil {
 		return err
 	}
-
 	var database = db.DB{Postgres: WorkerPool}
-	err = database.InsertContract(ctx, p.ContractHash, strings.ReplaceAll(contract.StoredValue.Contract.ContractPackageHash, "contract-package-wasm", ""), p.DeployHash, p.From, contract.GetContractType(), rawContractHash)
+	contractDeploy, err := database.GetDeploy(ctx, p.DeployHash)
+	if err != nil {
+		return err
+	}
+	retrieveNamedKeyValues(&contractParsed, contractDeploy)
+	if err != nil {
+		return err
+	}
+	contractJsonString, err := json.Marshal(contractParsed.StoredValue)
+	if err != nil {
+		return err
+	}
+	contractType, score := contractParsed.GetContractTypeAndScore()
+	err = database.InsertContract(ctx, p.ContractHash, strings.ReplaceAll(contractParsed.StoredValue.Contract.ContractPackageHash, "contract-package-wasm", ""), p.DeployHash, p.From, contractType, score, string(contractJsonString))
 	if err != nil {
 		return err
 	}
 
 	return nil
+}
+
+func retrieveNamedKeyValues(c *contract.Result, contractDeploy deploy.Result) {
+	urefsMap := contractDeploy.MapUrefs()
+	accessRights := regexp.MustCompile(`-\d{3}$`)
+	urefPrefix := regexp.MustCompile(`^uref-`)
+	for index, namedKey := range c.StoredValue.Contract.NamedKeys {
+		urefHash := accessRights.ReplaceAllString(namedKey.Key, "")
+		balanceHash := urefPrefix.ReplaceAllString(namedKey.Key, "balance-")
+		falseBool := false
+		c.StoredValue.Contract.NamedKeys[index].IsPurse = &falseBool
+		if val, ok := urefsMap[urefHash]; ok {
+			c.StoredValue.Contract.NamedKeys[index].InitialValue = val
+			_, balance := urefsMap[balanceHash]
+			c.StoredValue.Contract.NamedKeys[index].IsPurse = &balance
+		}
+	}
 }
 
 type ContractRawPayload struct {

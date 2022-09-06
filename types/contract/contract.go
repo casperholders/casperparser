@@ -7,17 +7,21 @@ import (
 	"log"
 )
 
-func (c Result) GetContractType() string {
+func (c Result) GetContractTypeAndScore() (string, float64) {
 	contractType := "unknown"
 	previousCount := 0
 	count := 0
 	perfectScore := 0
 	flatEntrypointArgs := make(map[string][]string)
+	contractPerfectScore := 0
+	contractPerfectScore += len(c.StoredValue.Contract.EntryPoints)
+	contractPerfectScore += len(c.StoredValue.Contract.NamedKeys)
 	for _, entrypoint := range c.StoredValue.Contract.EntryPoints {
 		var flatArgs []string
 		for _, arg := range entrypoint.Args {
 			flatArgs = append(flatArgs, arg.Name)
 		}
+		contractPerfectScore += len(entrypoint.Args)
 		flatEntrypointArgs[entrypoint.Name] = flatArgs
 	}
 
@@ -40,13 +44,11 @@ func (c Result) GetContractType() string {
 			contractType = contractName
 			previousCount = count
 		}
-		if count > 0 {
-			log.Printf("Contract name: %s Score: %d Perfect Score: %d Score NamedKeys: %d Perfect Score NamedKeys: %d\n", contractName, count, perfectScore, c.GetNamedKeysScore(contractDefinitions.NamedKeys), len(contractDefinitions.NamedKeys))
-		}
 		perfectScore = 0
 		count = 0
 	}
-	return contractType
+	log.Printf("Result - Contract name: %s Score: %d Perfect Score: %d Accuracy: %v \n", contractType, previousCount, contractPerfectScore, (float64(previousCount)/float64(contractPerfectScore))*100)
+	return contractType, (float64(previousCount) / float64(contractPerfectScore)) * 100
 }
 
 func (c Result) GetNamedKeysScore(namedKeys []string) int {
@@ -72,8 +74,10 @@ type Result struct {
 }
 
 type NamedKey struct {
-	Name string `json:"name"`
-	Key  string `json:"key"`
+	Name         string      `json:"name"`
+	Key          string      `json:"key"`
+	IsPurse      *bool       `json:"is_purse"`
+	InitialValue interface{} `json:"initial_value"`
 }
 
 type Entrypoint struct {

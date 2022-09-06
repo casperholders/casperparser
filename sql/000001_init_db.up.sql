@@ -51,8 +51,9 @@ CREATE TABLE "contracts"
     "package" VARCHAR(64) NOT NULL,
     "deploy"  VARCHAR(64),
     "from"    VARCHAR(68),
-    "type"    VARCHAR NOT NULL,
-    "data"    jsonb   NOT NULL
+    "type"    VARCHAR     NOT NULL,
+    "score"   FLOAT       NOT NULL,
+    "data"    jsonb       NOT NULL
 );
 
 ALTER TABLE "deploys"
@@ -75,3 +76,15 @@ SELECT count(*), type, date_trunc('day', timestamp) as day
 from deploys
 WHERE timestamp >= NOW() - INTERVAL '14 DAY'
 GROUP BY day, type;
+
+
+CREATE ROLE web_anon NOLOGIN;
+
+grant usage on schema public to web_anon;
+grant select on public.blocks to web_anon;
+grant select on public.contract_packages to web_anon;
+grant select on public.contracts to web_anon;
+grant select on public.deploys to web_anon;
+grant select on public.raw_blocks to web_anon;
+grant select on public.raw_deploys to web_anon;
+grant select on public.full_stats to web_anon;

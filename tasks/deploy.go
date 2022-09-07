@@ -59,7 +59,11 @@ func HandleDeployRawTask(ctx context.Context, t *asynq.Task) error {
 	contractName := rpcDeploy.GetName()
 	entrypoint, _ := rpcDeploy.GetEntrypoint()
 	var database = db.DB{Postgres: WorkerPool}
-
+	metadata = strings.ReplaceAll(metadata, "\\u0000", "")
+	err = database.InsertDeploy(ctx, rpcDeploy.Deploy.Hash, rpcDeploy.Deploy.Header.Account, cost, result, rpcDeploy.Deploy.Header.Timestamp, rpcDeploy.ExecutionResults[0].BlockHash, rpcDeploy.GetType(), jsonString, metadataDeployType, contractHash, contractName, entrypoint, metadata, events)
+	if err != nil {
+		return err
+	}
 	writeContracts := rpcDeploy.GetWriteContract()
 
 	for _, writeContract := range writeContracts {
@@ -71,12 +75,6 @@ func HandleDeployRawTask(ctx context.Context, t *asynq.Task) error {
 	for _, writeContractPackage := range writeContractPackages {
 		addContractPackageToQueue(strings.ReplaceAll(writeContractPackage, "hash-", ""), rpcDeploy.Deploy.Hash, rpcDeploy.Deploy.Header.Account)
 	}
-	metadata = strings.ReplaceAll(metadata, "\\u0000", "")
-	err = database.InsertDeploy(ctx, rpcDeploy.Deploy.Hash, rpcDeploy.Deploy.Header.Account, cost, result, rpcDeploy.Deploy.Header.Timestamp, rpcDeploy.ExecutionResults[0].BlockHash, rpcDeploy.GetType(), jsonString, metadataDeployType, contractHash, contractName, entrypoint, metadata, events)
-	if err != nil {
-		return err
-	}
-
 	return nil
 }
 

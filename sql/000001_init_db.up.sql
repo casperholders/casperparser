@@ -77,6 +77,11 @@ from deploys
 WHERE timestamp >= NOW() - INTERVAL '14 DAY'
 GROUP BY day, type;
 
+CREATE VIEW simple_stats AS
+SELECT count(*), date_trunc('day', timestamp) as day
+from deploys
+WHERE timestamp >= NOW() - INTERVAL '14 DAY'
+GROUP BY day;
 
 CREATE ROLE web_anon NOLOGIN;
 

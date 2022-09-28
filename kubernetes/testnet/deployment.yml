@@ -5,7 +5,7 @@ metadata:
     app: casperparser-testnet
   name: casperparser-testnet
 spec:
-  replicas: 30
+  replicas: 1
   selector:
     matchLabels:
       app: casperparser-testnet

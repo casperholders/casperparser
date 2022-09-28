@@ -93,3 +93,4 @@ grant select on public.deploys to web_anon;
 grant select on public.raw_blocks to web_anon;
 grant select on public.raw_deploys to web_anon;
 grant select on public.full_stats to web_anon;
+grant select on public.simple_stats to web_anon;

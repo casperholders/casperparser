@@ -41,7 +41,7 @@ func startReparse(redis asynq.RedisConnOpt) {
 	reparseDatabase = db.DB{Postgres: pgPool}
 	reparseClient = asynq.NewClient(redis)
 	defer reparseClient.Close()
-	const sql = `SELECT hash FROM deploys`
+	const sql = `SELECT hash FROM blocks WHERE era_end = true`
 
 	rows, err := reparseDatabase.Postgres.Query(context.Background(), sql)
 	if err != nil {
@@ -56,11 +56,11 @@ func startReparse(redis asynq.RedisConnOpt) {
 		if err != nil {
 			log.Fatal(err)
 		}
-		task, err := tasks.NewDeployKnownTask(missing.hash)
+		task, err := tasks.NewRewardTask(missing.hash)
 		if err != nil {
 			log.Fatalf("could not create task: %v", err)
 		}
-		_, err = reparseClient.Enqueue(task, asynq.Queue("deploys"))
+		_, err = reparseClient.Enqueue(task, asynq.Queue("era"))
 		if err != nil {
 			log.Fatalf("could not enqueue task: %v", err)
 		}

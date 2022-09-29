@@ -32,6 +32,7 @@ casperParser worker --redis 127.0.0.1:6379 -- Will start the worker with a singl
 				"blocks":    1,
 				"deploys":   1,
 				"contracts": 1,
+				"era":       1,
 			},
 		}
 		tasks.WorkerRpcClient = getRpcClient()
@@ -64,7 +65,7 @@ casperParser worker --redis 127.0.0.1:6379 -- Will start the worker with a singl
 func init() {
 	rootCmd.AddCommand(workerCmd)
 	workerCmd.Flags().IntVarP(&concurrency, "concurrency", "k", 100, "Number of concurrent workers to use. The database connection pool will be set to the same number")
-	workerCmd.Flags().StringSliceVarP(&queues, "queues", "q", []string{"blocks", "1", "deploys", "1", "contracts", "1"}, "Set queues with priority")
+	workerCmd.Flags().StringSliceVarP(&queues, "queues", "q", []string{"blocks", "1", "deploys", "1", "contracts", "1", "era", "1"}, "Set queues with priority")
 }
 
 // startWorkers with a redis and asynq config
@@ -86,6 +87,7 @@ func startWorkers(redis asynq.RedisConnOpt, conf asynq.Config) {
 	mux.HandleFunc(tasks.TypeDeployKnown, tasks.HandleDeployKnownTask)
 	mux.HandleFunc(tasks.TypeContractPackageRaw, tasks.HandleContractPackageRawTask)
 	mux.HandleFunc(tasks.TypeContractRaw, tasks.HandleContractRawTask)
+	mux.HandleFunc(tasks.TypeReward, tasks.HandleRewardTask)
 	tasks.WorkerAsyncClient = asynq.NewClient(redis)
 	defer tasks.WorkerAsyncClient.Close()
 	if err := srv.Run(mux); err != nil {

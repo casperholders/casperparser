@@ -1,0 +1,29 @@
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: update-db
+spec:
+  # Backup the database every day at 2AM
+  schedule: "* * 31 2 *"
+  suspend: true
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+            - name: reparse
+              image: killianh/casperparser
+              imagePullPolicy: Always
+              args: [ "reparse" ]
+              volumeMounts:
+                - name: config-volume
+                  mountPath: /root/.casperParser.yaml
+                  subPath: .casperParser.yaml
+              envFrom:
+                - configMapRef:
+                    name: casperparser-config-testnet
+          volumes:
+            - name: config-volume
+              configMap:
+                name: parser-config
+          restartPolicy: Never

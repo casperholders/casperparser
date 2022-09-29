@@ -7,6 +7,7 @@ import (
 	"casperParser/types/contract"
 	"casperParser/types/contractPackage"
 	"casperParser/types/deploy"
+	"casperParser/types/reward"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -170,6 +171,22 @@ func (c *Client) GetContract(hash string) (contract.Result, error) {
 		return contract.Result{}, err
 	}
 	return contractParsed, nil
+}
+
+// GetEraInfo from the casper blockchain
+func (c *Client) GetEraInfo(hash string) (reward.Result, error) {
+	resp, err := c.RpcCall("chain_get_era_info_by_switch_block", []map[string]string{{
+		"Hash": hash,
+	}})
+	if err != nil {
+		return reward.Result{}, err
+	}
+	var rewardParsed reward.Result
+	err = json.Unmarshal(resp.Result, &rewardParsed)
+	if err != nil {
+		return reward.Result{}, err
+	}
+	return rewardParsed, nil
 }
 
 type Request struct {

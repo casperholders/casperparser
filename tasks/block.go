@@ -54,6 +54,10 @@ func HandleBlockRawTask(ctx context.Context, t *asynq.Task) error {
 		return err
 	}
 
+	if eraEnd {
+		addEraToQueue(result.Block.Hash)
+	}
+
 	for _, s := range result.Block.Body.TransferHashes {
 		addDeployToQueue(s)
 	}
@@ -100,6 +104,18 @@ func addDeployToQueue(hash string) {
 		log.Fatalf("could not create task: %v", err)
 	}
 	_, err = WorkerAsyncClient.Enqueue(task, asynq.Queue("deploys"))
+	if err != nil {
+		log.Fatalf("could not enqueue task: %v", err)
+	}
+}
+
+// addEraToQueue a era hash to the queue
+func addEraToQueue(hash string) {
+	task, err := NewRewardTask(hash)
+	if err != nil {
+		log.Fatalf("could not create task: %v", err)
+	}
+	_, err = WorkerAsyncClient.Enqueue(task, asynq.Queue("era"))
 	if err != nil {
 		log.Fatalf("could not enqueue task: %v", err)
 	}

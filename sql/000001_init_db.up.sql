@@ -56,6 +56,22 @@ CREATE TABLE "contracts"
     "data"    jsonb       NOT NULL
 );
 
+
+CREATE TABLE "rewards"
+(
+    "block"                VARCHAR(64) NOT NULL,
+    "era"                  BIGINT NOT NULL,
+    "delegator_public_key" VARCHAR(68),
+    "validator_public_key" VARCHAR(68) NOT NULL,
+    "amount"               VARCHAR     NOT NULL
+);
+
+ALTER TABLE "rewards"
+    ADD FOREIGN KEY ("block") REFERENCES "blocks" ("hash");
+
+ALTER TABLE "rewards"
+    ADD CONSTRAINT uReward UNIQUE (block, era, delegator_public_key, validator_public_key);
+
 ALTER TABLE "deploys"
     ADD FOREIGN KEY ("block") REFERENCES "blocks" ("hash");
 
@@ -83,6 +99,9 @@ from deploys
 WHERE timestamp >= NOW() - INTERVAL '14 DAY'
 GROUP BY day;
 
+CREATE VIEW total_rewards AS
+SELECT sum(amount::BIGINT) as total_rewards FROM rewards;
+
 CREATE ROLE web_anon NOLOGIN;
 
 grant usage on schema public to web_anon;
@@ -94,3 +113,5 @@ grant select on public.raw_blocks to web_anon;
 grant select on public.raw_deploys to web_anon;
 grant select on public.full_stats to web_anon;
 grant select on public.simple_stats to web_anon;
+grant select on public.rewards to web_anon;
+grant select on public.total_rewards to web_anon;

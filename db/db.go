@@ -234,6 +234,32 @@ func (db *DB) InsertContract(ctx context.Context, hash string, packageHash strin
 	return nil
 }
 
+// InsertReward in the database
+func (db *DB) InsertReward(ctx context.Context, block string, era int, delegator_public_key string, validator_public_key string, amount string) error {
+	block = strings.ToLower(block)
+	const sql = `INSERT INTO rewards ("block", "era", "delegator_public_key", "validator_public_key", "amount")
+	VALUES ($1, $2, $3, $4, $5)
+	ON CONFLICT (block, era, delegator_public_key, validator_public_key)
+	DO UPDATE
+	SET amount = $5;`
+	var dpk *string
+	dpk = nil
+	if delegator_public_key != "" {
+		dpk = &delegator_public_key
+	}
+	switch _, err := db.Postgres.Exec(ctx, sql, block, era, dpk, validator_public_key, amount); {
+	case errors.Is(err, context.Canceled), errors.Is(err, context.DeadlineExceeded):
+		return err
+	case err != nil:
+		if sqlErr := db.blockPgError(err); sqlErr != nil {
+			return sqlErr
+		}
+		log.Printf("cannot create contract on database: %v\n", err)
+		return errors.New("cannot create contract on database")
+	}
+	return nil
+}
+
 // GetMissingBlocks from the database
 func (db *DB) GetMissingBlocks(ctx context.Context) ([]int, error) {
 	const sql = `SELECT all_ids AS missing_ids FROM generate_series((SELECT MIN(height) FROM blocks), (SELECT MAX(height) FROM blocks)) all_ids EXCEPT SELECT height FROM blocks;`

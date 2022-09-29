@@ -59,3 +59,14 @@ func TestClient_GetContract(t *testing.T) {
 		t.Errorf("Should have thrown an error")
 	}
 }
+
+func TestClient_GetEraInfo(t *testing.T) {
+	r, err := rpcClient.GetEraInfo("3293b31319a97a6451614f57bdd7f65225d4cb2add24fd78af373b4188413a10")
+	if err != nil {
+		t.Errorf("Unable to retrieve era info %s", err)
+	}
+	r, err = rpcClient.GetEraInfo("wronghash")
+	if r.EraSummary != nil {
+		t.Errorf("Should be nil")
+	}
+}

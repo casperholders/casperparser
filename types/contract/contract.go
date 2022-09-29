@@ -48,7 +48,11 @@ func (c Result) GetContractTypeAndScore() (string, float64) {
 		count = 0
 	}
 	log.Printf("Result - Contract name: %s Score: %d Perfect Score: %d Accuracy: %v \n", contractType, previousCount, contractPerfectScore, (float64(previousCount)/float64(contractPerfectScore))*100)
-	return contractType, (float64(previousCount) / float64(contractPerfectScore)) * 100
+	score := 0.0
+	if contractPerfectScore > 0.0 {
+		score = (float64(previousCount) / float64(contractPerfectScore)) * 100
+	}
+	return contractType, score
 }
 
 func (c Result) GetNamedKeysScore(namedKeys []string) int {

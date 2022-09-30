@@ -102,6 +102,10 @@ GROUP BY day;
 CREATE VIEW total_rewards AS
 SELECT sum(amount::BIGINT) as total_rewards FROM rewards;
 
+CREATE FUNCTION era_rewards(eraid integer) RETURNS BIGINT AS $$
+SELECT sum(amount::BIGINT) FROM rewards where era = eraid;
+$$ LANGUAGE SQL;
+
 CREATE ROLE web_anon NOLOGIN;
 
 grant usage on schema public to web_anon;
@@ -115,3 +119,4 @@ grant select on public.full_stats to web_anon;
 grant select on public.simple_stats to web_anon;
 grant select on public.rewards to web_anon;
 grant select on public.total_rewards to web_anon;
+grant execute on function era_rewards(integer) to web_anon;

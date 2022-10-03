@@ -60,7 +60,7 @@ CREATE TABLE "contracts"
 CREATE TABLE "rewards"
 (
     "block"                VARCHAR(64) NOT NULL,
-    "era"                  BIGINT NOT NULL,
+    "era"                  BIGINT      NOT NULL,
     "delegator_public_key" VARCHAR(68),
     "validator_public_key" VARCHAR(68) NOT NULL,
     "amount"               VARCHAR     NOT NULL
@@ -86,6 +86,9 @@ ALTER TABLE "contracts"
 
 CREATE INDEX ON "deploys" ("block");
 CREATE INDEX ON "deploys" ("from");
+CREATE INDEX ON "deploys" ("contract_hash");
+CREATE INDEX ON "deploys" ("result");
+CREATE INDEX ON "deploys" ("timestamp");
 
 CREATE VIEW full_stats AS
 SELECT count(*), type, date_trunc('day', timestamp) as day
@@ -100,10 +103,36 @@ WHERE timestamp >= NOW() - INTERVAL '14 DAY'
 GROUP BY day;
 
 CREATE VIEW total_rewards AS
-SELECT sum(amount::BIGINT) as total_rewards FROM rewards;
+SELECT sum(amount::BIGINT) as total_rewards
+FROM rewards;
 
-CREATE FUNCTION era_rewards(eraid integer) RETURNS BIGINT AS $$
-SELECT sum(amount::BIGINT) FROM rewards where era = eraid;
+CREATE FUNCTION era_rewards(eraid integer) RETURNS BIGINT AS
+$$
+SELECT sum(amount::BIGINT)
+FROM rewards
+where era = eraid;
+$$ LANGUAGE SQL;
+
+CREATE FUNCTION block_details(blockhash VARCHAR(64), OUT total bigint, OUT success bigint, OUT failed bigint,
+                              OUT total_cost bigint) AS
+$$
+SELECT count(*)                                                                   as total,
+       (SELECT count(*) from deploys where block = blockhash and result is true)  as success,
+       (SELECT count(*) from deploys where block = blockhash and result is false) as failed,
+       sum(cost::BIGINT)                                                          as total_cost
+FROM deploys
+where block = blockhash;
+$$ LANGUAGE SQL;
+
+CREATE FUNCTION contract_details(contracthash VARCHAR(64), OUT total bigint, OUT success bigint, OUT failed bigint,
+                              OUT total_cost bigint) AS
+$$
+SELECT count(*)                                                                   as total,
+       (SELECT count(*) from deploys where contract_hash = contracthash and result is true)  as success,
+       (SELECT count(*) from deploys where contract_hash = contracthash and result is false) as failed,
+       sum(cost::BIGINT)                                                          as total_cost
+FROM deploys
+where contract_hash = contracthash;
 $$ LANGUAGE SQL;
 
 CREATE ROLE web_anon NOLOGIN;
@@ -120,3 +149,5 @@ grant select on public.simple_stats to web_anon;
 grant select on public.rewards to web_anon;
 grant select on public.total_rewards to web_anon;
 grant execute on function era_rewards(integer) to web_anon;
+grant execute on function block_details(VARCHAR(64)) to web_anon;
+grant execute on function contract_details(VARCHAR(64)) to web_anon;

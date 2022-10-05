@@ -70,7 +70,7 @@ CREATE TABLE "bids"
 (
     "public_key"      VARCHAR(68) NOT NULL PRIMARY KEY,
     "bonding_purse"   VARCHAR     NOT NULL,
-    "staked_amount"   VARCHAR     NOT NULL,
+    "staked_amount"   BIGINT     NOT NULL,
     "delegation_rate" INT         NOT NULL,
     "inactive"        BOOL        NOT NULL
 );
@@ -79,7 +79,7 @@ CREATE TABLE "delegators"
 (
     "public_key"    VARCHAR(68) NOT NULL,
     "delegatee"     VARCHAR(68) NOT NULL,
-    "staked_amount" VARCHAR     NOT NULL,
+    "staked_amount" BIGINT     NOT NULL,
     "bonding_purse" VARCHAR     NOT NULL
 );
 

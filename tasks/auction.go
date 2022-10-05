@@ -4,7 +4,9 @@ package tasks
 import (
 	"casperParser/db"
 	"context"
+	"fmt"
 	"github.com/hibiken/asynq"
+	"math/big"
 )
 
 // TypeAuction Task auction type
@@ -27,11 +29,21 @@ func HandleAuctionTask(ctx context.Context, t *asynq.Task) error {
 	var rowsToInsertDelegators [][]interface{}
 
 	for _, b := range auctionParsed.AuctionState.Bids {
-		bidRow := []interface{}{b.PublicKey, b.Bid.BondingPurse, b.Bid.StakedAmount, b.Bid.DelegationRate, b.Bid.Inactive}
-		rowsToInsertBids = append(rowsToInsertBids, bidRow)
-		for _, d := range b.Bid.Delegators {
-			delegatorRow := []interface{}{d.PublicKey, d.Delegatee, d.StakedAmount, d.BondingPurse}
-			rowsToInsertDelegators = append(rowsToInsertDelegators, delegatorRow)
+		bStaked, ok := new(big.Int).SetString(b.Bid.StakedAmount, 10)
+		if ok {
+			bidRow := []interface{}{b.PublicKey, b.Bid.BondingPurse, bStaked.Int64(), b.Bid.DelegationRate, b.Bid.Inactive}
+			rowsToInsertBids = append(rowsToInsertBids, bidRow)
+			for _, d := range b.Bid.Delegators {
+				dStaked, dok := new(big.Int).SetString(d.StakedAmount, 10)
+				if dok {
+					delegatorRow := []interface{}{d.PublicKey, d.Delegatee, dStaked.Int64(), d.BondingPurse}
+					rowsToInsertDelegators = append(rowsToInsertDelegators, delegatorRow)
+				} else {
+					return fmt.Errorf("cannot convert stake to bigint for %s / v: %s", d.PublicKey, d.Delegatee)
+				}
+			}
+		} else {
+			return fmt.Errorf("cannot convert stake to bigint for v: %s", b.PublicKey)
 		}
 	}
 

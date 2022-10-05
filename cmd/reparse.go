@@ -17,9 +17,18 @@ var reparsePool int
 
 // reparseCmd represents the reparse command
 var reparseCmd = &cobra.Command{
-	Use:       "reparse",
-	Short:     "Reparse all unknown deploys from the database without calling rpc",
-	Long:      ``,
+	Use:   "reparse [all|era|deploys|moduleBytes|exceptTransfers]",
+	Short: "Reparse all unknown deploys from the database without calling rpc",
+	Long: `Reparse specifics items from the database
+
+You must add at least one argument from those :
+
+all: reparse every blocks from rpc, will ignore any other args
+era: only reparse switch blocks
+deploys: only reparse deploys, will ignore any other deploy args
+moduleBytes: only reparse moduleBytes deploys
+exceptTransfers: only reparse deploys except transfers deploys
+`,
 	ValidArgs: []string{"all", "era", "deploys", "moduleBytes", "exceptTransfers"},
 	Args:      cobra.MatchAll(cobra.MinimumNArgs(1), cobra.OnlyValidArgs),
 	Run: func(cmd *cobra.Command, args []string) {

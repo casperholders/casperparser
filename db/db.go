@@ -107,6 +107,42 @@ func (db *DB) InsertDeploy(ctx context.Context, hash string, from string, cost s
 	return db.UpdateDeploy(ctx, hash, from, cost, result, timestamp, block, deployType, metadataType, contractHash, contractName, entrypoint, metadata, events)
 }
 
+func (db *DB) InsertAuction(ctx context.Context, rowsToInsertBids [][]interface{}, rowsToInsertDelegators [][]interface{}) error {
+	const sql = `TRUNCATE bids; TRUNCATE delegators;`
+	switch _, err := db.Postgres.Exec(ctx, sql); {
+	case errors.Is(err, context.Canceled), errors.Is(err, context.DeadlineExceeded):
+		return err
+	case err != nil:
+		if sqlErr := db.blockPgError(err); sqlErr != nil {
+			return sqlErr
+		}
+		log.Printf("cannot truncate bids & delegators: %v\n", err)
+		return errors.New("cannot truncate bids & delegators")
+	}
+
+	copyCount, err := db.Postgres.CopyFrom(
+		ctx,
+		pgx.Identifier{"bids"},
+		[]string{"public_key", "bonding_purse", "staked_amount", "delegation_rate", "inactive"},
+		pgx.CopyFromRows(rowsToInsertBids),
+	)
+	log.Printf("Inserted %v rows into bids", copyCount)
+	if err != nil {
+		return err
+	}
+	copyCount, err = db.Postgres.CopyFrom(
+		ctx,
+		pgx.Identifier{"delegators"},
+		[]string{"public_key", "delegatee", "staked_amount", "bonding_purse"},
+		pgx.CopyFromRows(rowsToInsertDelegators),
+	)
+	log.Printf("Inserted %v rows into delegators", copyCount)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 // UpdateDeploy in the database
 func (db *DB) UpdateDeploy(ctx context.Context, hash string, from string, cost string, result bool, timestamp string, block string, deployType string, metadataType string, contractHash string, contractName string, entrypoint string, metadata string, events string) error {
 	hash = strings.ToLower(hash)
@@ -234,28 +270,17 @@ func (db *DB) InsertContract(ctx context.Context, hash string, packageHash strin
 	return nil
 }
 
-// InsertReward in the database
-func (db *DB) InsertReward(ctx context.Context, block string, era int, delegator_public_key string, validator_public_key string, amount string) error {
-	block = strings.ToLower(block)
-	const sql = `INSERT INTO rewards ("block", "era", "delegator_public_key", "validator_public_key", "amount")
-	VALUES ($1, $2, $3, $4, $5)
-	ON CONFLICT (block, era, delegator_public_key, validator_public_key)
-	DO UPDATE
-	SET amount = $5;`
-	var dpk *string
-	dpk = nil
-	if delegator_public_key != "" {
-		dpk = &delegator_public_key
-	}
-	switch _, err := db.Postgres.Exec(ctx, sql, block, era, dpk, validator_public_key, amount); {
-	case errors.Is(err, context.Canceled), errors.Is(err, context.DeadlineExceeded):
+// InsertRewards in the database
+func (db *DB) InsertRewards(ctx context.Context, rowsToInsert [][]interface{}) error {
+	copyCount, err := db.Postgres.CopyFrom(
+		ctx,
+		pgx.Identifier{"rewards"},
+		[]string{"block", "era", "delegator_public_key", "validator_public_key", "amount"},
+		pgx.CopyFromRows(rowsToInsert),
+	)
+	log.Printf("Inserted %v rows into rewards", copyCount)
+	if err != nil {
 		return err
-	case err != nil:
-		if sqlErr := db.blockPgError(err); sqlErr != nil {
-			return sqlErr
-		}
-		log.Printf("cannot create contract on database: %v\n", err)
-		return errors.New("cannot create contract on database")
 	}
 	return nil
 }

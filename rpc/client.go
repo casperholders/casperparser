@@ -3,6 +3,7 @@ package rpc
 
 import (
 	"bytes"
+	"casperParser/types/auction"
 	"casperParser/types/block"
 	"casperParser/types/contract"
 	"casperParser/types/contractPackage"
@@ -101,6 +102,22 @@ func (c *Client) GetLastBlockHeight() (int, error) {
 		return -1, fmt.Errorf("failed to get result: %w", err)
 	}
 	return result.Block.Header.Height, nil
+}
+
+// GetAuction from the casper blockchain
+func (c *Client) GetAuction() (auction.Result, error) {
+	resp, err := c.RpcCall("state_get_auction_info", nil)
+
+	if err != nil {
+		return auction.Result{}, err
+	}
+
+	var result auction.Result
+	err = json.Unmarshal(resp.Result, &result)
+	if err != nil {
+		return auction.Result{}, fmt.Errorf("failed to get result: %w", err)
+	}
+	return result, nil
 }
 
 // GetDeploy from the casper blockchain

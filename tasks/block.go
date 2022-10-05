@@ -39,7 +39,7 @@ func NewBlockVerifyTask(blockHash string) (*asynq.Task, error) {
 func HandleBlockRawTask(ctx context.Context, t *asynq.Task) error {
 	var p BlockRawPayload
 	if err := json.Unmarshal(t.Payload(), &p); err != nil {
-		return fmt.Errorf("json.Unmarshal failed: %v: %w", err, asynq.SkipRetry)
+		return fmt.Errorf("json.Unmarshal failed: %v", err)
 	}
 
 	result, block, err := WorkerRpcClient.GetBlock(p.BlockHeight)
@@ -71,7 +71,7 @@ func HandleBlockRawTask(ctx context.Context, t *asynq.Task) error {
 func HandleBlockVerifyTask(ctx context.Context, t *asynq.Task) error {
 	var p BlockVerifyPayload
 	if err := json.Unmarshal(t.Payload(), &p); err != nil {
-		return fmt.Errorf("json.Unmarshal failed: %v: %w", err, asynq.SkipRetry)
+		return fmt.Errorf("json.Unmarshal failed: %v", err)
 	}
 
 	var database = db.DB{Postgres: WorkerPool}

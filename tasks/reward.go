@@ -1,4 +1,4 @@
-// Package tasks Define the contract task payload and handler
+// Package tasks Define the reward task payload and handler
 package tasks
 
 import (
@@ -24,24 +24,26 @@ func NewRewardTask(hash string) (*asynq.Task, error) {
 	return asynq.NewTask(TypeReward, payload), nil
 }
 
-// HandleRewardTask fetch a contract  from the rpc endpoint, parse it, and insert it in the database
+// HandleRewardTask fetch era rewards from the rpc endpoint, parse it, and insert it in the database
 func HandleRewardTask(ctx context.Context, t *asynq.Task) error {
 	var p RewardPayload
 	if err := json.Unmarshal(t.Payload(), &p); err != nil {
-		return fmt.Errorf("json.Unmarshal failed: %v: %w", err, asynq.SkipRetry)
+		return fmt.Errorf("json.Unmarshal failed: %v", err)
 	}
 
 	eraParsed, err := WorkerRpcClient.GetEraInfo(strings.ToLower(p.BlockHash))
 	if err != nil {
 		return err
 	}
-	var database = db.DB{Postgres: WorkerPool}
+
+	var rowsToInsert [][]interface{}
 	for _, s := range eraParsed.EraSummary.StoredValue.EraInfo.SeigniorageAllocations {
-		dpk := ""
+		var dpk *string
+		dpk = nil
 		vpk := ""
 		amount := ""
 		if s.Delegator != nil {
-			dpk = s.Delegator.DelegatorPublicKey
+			dpk = &s.Delegator.DelegatorPublicKey
 			vpk = s.Delegator.ValidatorPublicKey
 			amount = s.Delegator.Amount
 		}
@@ -49,10 +51,15 @@ func HandleRewardTask(ctx context.Context, t *asynq.Task) error {
 			vpk = s.Validator.ValidatorPublicKey
 			amount = s.Validator.Amount
 		}
-		err = database.InsertReward(ctx, eraParsed.EraSummary.BlockHash, eraParsed.EraSummary.EraId, dpk, vpk, amount)
-		if err != nil {
-			return err
-		}
+		block := strings.ToLower(eraParsed.EraSummary.BlockHash)
+		row := []interface{}{block, eraParsed.EraSummary.EraId, dpk, vpk, amount}
+		rowsToInsert = append(rowsToInsert, row)
+	}
+
+	var database = db.DB{Postgres: WorkerPool}
+	err = database.InsertRewards(ctx, rowsToInsert)
+	if err != nil {
+		return err
 	}
 
 	return nil

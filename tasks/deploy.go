@@ -40,7 +40,7 @@ func NewDeployKnownTask(hash string) (*asynq.Task, error) {
 func HandleDeployRawTask(ctx context.Context, t *asynq.Task) error {
 	var p DeployRawPayload
 	if err := json.Unmarshal(t.Payload(), &p); err != nil {
-		return fmt.Errorf("json.Unmarshal failed: %v: %w", err, asynq.SkipRetry)
+		return fmt.Errorf("json.Unmarshal failed: %v", err)
 	}
 
 	rpcDeploy, resp, err := WorkerRpcClient.GetDeploy(p.DeployHash)
@@ -82,7 +82,7 @@ func HandleDeployRawTask(ctx context.Context, t *asynq.Task) error {
 func HandleDeployKnownTask(ctx context.Context, t *asynq.Task) error {
 	var p DeployKnownPayload
 	if err := json.Unmarshal(t.Payload(), &p); err != nil {
-		return fmt.Errorf("json.Unmarshal failed: %v: %w", err, asynq.SkipRetry)
+		return fmt.Errorf("json.Unmarshal failed: %v", err)
 	}
 	var database = db.DB{Postgres: WorkerPool}
 	dbDeploy, err := database.GetDeploy(ctx, p.DeployHash)

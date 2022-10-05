@@ -28,7 +28,7 @@ func NewContractPackageRawTask(hash string, deployHash string, from string) (*as
 func HandleContractPackageRawTask(ctx context.Context, t *asynq.Task) error {
 	var p ContractPackageRawPayload
 	if err := json.Unmarshal(t.Payload(), &p); err != nil {
-		return fmt.Errorf("json.Unmarshal failed: %v: %w", err, asynq.SkipRetry)
+		return fmt.Errorf("json.Unmarshal failed: %v", err)
 	}
 
 	rawContractPackageHash, err := WorkerRpcClient.GetContractPackage(strings.ToLower(p.ContractPackageHash))

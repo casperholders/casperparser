@@ -80,7 +80,7 @@ type Result struct {
 type NamedKey struct {
 	Name         string      `json:"name"`
 	Key          string      `json:"key"`
-	IsPurse      *bool       `json:"is_purse"`
+	IsPurse      bool        `json:"is_purse"`
 	InitialValue interface{} `json:"initial_value"`
 }
 

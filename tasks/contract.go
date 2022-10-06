@@ -66,13 +66,13 @@ func retrieveNamedKeyValues(c *contract.Result, contractDeploy deploy.Result) {
 	urefPrefix := regexp.MustCompile(`^uref-`)
 	for index, namedKey := range c.StoredValue.Contract.NamedKeys {
 		urefHash := accessRights.ReplaceAllString(namedKey.Key, "")
-		balanceHash := urefPrefix.ReplaceAllString(namedKey.Key, "balance-")
-		falseBool := false
-		c.StoredValue.Contract.NamedKeys[index].IsPurse = &falseBool
+		balanceHash := urefPrefix.ReplaceAllString(urefHash, "balance-")
+		c.StoredValue.Contract.NamedKeys[index].IsPurse = false
 		if val, ok := urefsMap[urefHash]; ok {
 			c.StoredValue.Contract.NamedKeys[index].InitialValue = val
-			_, balance := urefsMap[balanceHash]
-			c.StoredValue.Contract.NamedKeys[index].IsPurse = &balance
+		}
+		if _, balance := urefsMap[balanceHash]; balance {
+			c.StoredValue.Contract.NamedKeys[index].IsPurse = true
 		}
 	}
 }

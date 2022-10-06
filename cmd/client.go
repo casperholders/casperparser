@@ -98,6 +98,9 @@ func addBlockTask(height int) {
 	if err != nil {
 		log.Printf("could not enqueue task: %v\n", err)
 	}
+}
+
+func addAuctionTask() {
 	auction, err := tasks.NewAuctionTask()
 	if err != nil {
 		log.Printf("could not create task: %v\n", err)
@@ -129,6 +132,7 @@ func listenEvents() {
 		height, ok := transforms.S("BlockAdded", "block", "header", "height").Data().(float64)
 		if ok {
 			addBlockTask(int(height))
+			addAuctionTask()
 		}
 	})
 	if err != nil {

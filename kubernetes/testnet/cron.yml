@@ -1,4 +1,4 @@
-apiVersion: batch/v1beta1
+apiVersion: batch/v1
 kind: CronJob
 metadata:
   name: reparse-all
@@ -27,7 +27,7 @@ spec:
                 name: parser-config
           restartPolicy: Never
 ---
-apiVersion: batch/v1beta1
+apiVersion: batch/v1
 kind: CronJob
 metadata:
   name: reparse-era
@@ -56,7 +56,7 @@ spec:
                 name: parser-config
           restartPolicy: Never
 ---
-apiVersion: batch/v1beta1
+apiVersion: batch/v1
 kind: CronJob
 metadata:
   name: reparse-deploys
@@ -85,7 +85,7 @@ spec:
                 name: parser-config
           restartPolicy: Never
 ---
-apiVersion: batch/v1beta1
+apiVersion: batch/v1
 kind: CronJob
 metadata:
   name: reparse-module-bytes
@@ -114,7 +114,7 @@ spec:
                 name: parser-config
           restartPolicy: Never
 ---
-apiVersion: batch/v1beta1
+apiVersion: batch/v1
 kind: CronJob
 metadata:
   name: reparse-except-transfers
@@ -130,6 +130,35 @@ spec:
               image: killianh/casperparser
               imagePullPolicy: Always
               args: [ "reparse", "exceptTransfers" ]
+              volumeMounts:
+                - name: config-volume
+                  mountPath: /root/.casperParser.yaml
+                  subPath: .casperParser.yaml
+              envFrom:
+                - configMapRef:
+                    name: casperparser-config-testnet
+          volumes:
+            - name: config-volume
+              configMap:
+                name: parser-config
+          restartPolicy: Never
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: reparse-account-purses
+spec:
+  schedule: "* * 31 2 *"
+  suspend: true
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+            - name: reparse
+              image: killianh/casperparser
+              imagePullPolicy: Always
+              args: [ "reparse", "accountPurses" ]
               volumeMounts:
                 - name: config-volume
                   mountPath: /root/.casperParser.yaml

@@ -13,8 +13,13 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"log"
 	"net/http"
+	"time"
 )
+
+var cachedStateRootHash = ""
+var cachedStateRootHashTime = time.Now()
 
 type Client struct {
 	endpoint string
@@ -140,17 +145,12 @@ func (c *Client) GetDeploy(hash string) (deploy.Result, json.RawMessage, error) 
 
 // GetContractPackage from the casper blockchain
 func (c *Client) GetContractPackage(hash string) (string, error) {
-	resp, err := c.RpcCall("chain_get_state_root_hash", nil)
-	if err != nil {
-		return "", err
-	}
-	var result stateRootHash
-	err = json.Unmarshal(resp.Result, &result)
+	srh, err := c.GetStateRootHash(false)
 	if err != nil {
 		return "", fmt.Errorf("failed to get result: %w", err)
 	}
 
-	resp, err = c.RpcCall("state_get_item", []string{result.StateRootHash, "hash-" + hash})
+	resp, err := c.RpcCall("state_get_item", []string{srh, "hash-" + hash})
 	if err != nil {
 		return "", err
 	}
@@ -166,19 +166,72 @@ func (c *Client) GetContractPackage(hash string) (string, error) {
 	return string(b), nil
 }
 
+// GetStateRootHash from the casper blockchain
+func (c *Client) GetStateRootHash(cache bool) (string, error) {
+	now := time.Now()
+	if cachedStateRootHash == "" || !cache || now.Sub(cachedStateRootHashTime).Seconds() > 32 {
+		resp, err := c.RpcCall("chain_get_state_root_hash", nil)
+		if err != nil {
+			return "", err
+		}
+		var result stateRootHash
+		err = json.Unmarshal(resp.Result, &result)
+		if err != nil {
+			return "", fmt.Errorf("failed to get result: %w", err)
+		}
+
+		cachedStateRootHash = result.StateRootHash
+		cachedStateRootHashTime = time.Now()
+	}
+	return cachedStateRootHash, nil
+}
+
+// GetMainPurse from the casper blockchain
+func (c *Client) GetMainPurse(hash string) (string, error) {
+	srh, err := c.GetStateRootHash(false)
+	if err != nil {
+		return "", fmt.Errorf("failed to get result: %w", err)
+	}
+	resp, err := c.RpcCall("state_get_item", []string{srh, hash})
+	if err != nil {
+		return "", err
+	}
+
+	var result mainPurse
+	err = json.Unmarshal(resp.Result, &result)
+	if err != nil {
+		return "", fmt.Errorf("failed to get result: %w", err)
+	}
+	log.Println(result)
+	return result.StoredValue.Account.MainPurse, nil
+}
+
+// GetPurseBalance from the casper blockchain
+func (c *Client) GetPurseBalance(hash string) (string, error) {
+	srh, err := c.GetStateRootHash(false)
+	if err != nil {
+		return "", fmt.Errorf("failed to get result: %w", err)
+	}
+	resp, err := c.RpcCall("state_get_balance", []string{srh, hash})
+	if err != nil {
+		return "", err
+	}
+	var result purseBalance
+	err = json.Unmarshal(resp.Result, &result)
+	if err != nil {
+		return "", fmt.Errorf("failed to get result: %w", err)
+	}
+	return result.BalanceValue, nil
+}
+
 // GetContract from the casper blockchain
 func (c *Client) GetContract(hash string) (contract.Result, error) {
-	resp, err := c.RpcCall("chain_get_state_root_hash", nil)
-	if err != nil {
-		return contract.Result{}, err
-	}
-	var result stateRootHash
-	err = json.Unmarshal(resp.Result, &result)
+	srh, err := c.GetStateRootHash(false)
 	if err != nil {
 		return contract.Result{}, fmt.Errorf("failed to get result: %w", err)
 	}
 
-	resp, err = c.RpcCall("state_get_item", []string{result.StateRootHash, "hash-" + hash})
+	resp, err := c.RpcCall("state_get_item", []string{srh, "hash-" + hash})
 	if err != nil {
 		return contract.Result{}, err
 	}
@@ -234,4 +287,16 @@ type blockIdentifier struct {
 
 type stateRootHash struct {
 	StateRootHash string `json:"state_root_hash"`
+}
+
+type mainPurse struct {
+	StoredValue struct {
+		Account struct {
+			MainPurse string `json:"main_purse"`
+		} `json:"Account"`
+	} `json:"stored_value"`
+}
+
+type purseBalance struct {
+	BalanceValue string `json:"balance_value"`
 }

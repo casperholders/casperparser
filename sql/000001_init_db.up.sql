@@ -70,7 +70,7 @@ CREATE TABLE "bids"
 (
     "public_key"      VARCHAR(68) NOT NULL PRIMARY KEY,
     "bonding_purse"   VARCHAR     NOT NULL,
-    "staked_amount"   BIGINT     NOT NULL,
+    "staked_amount"   NUMERIC     NOT NULL,
     "delegation_rate" INT         NOT NULL,
     "inactive"        BOOL        NOT NULL
 );
@@ -79,8 +79,21 @@ CREATE TABLE "delegators"
 (
     "public_key"    VARCHAR(68) NOT NULL,
     "delegatee"     VARCHAR(68) NOT NULL,
-    "staked_amount" BIGINT     NOT NULL,
+    "staked_amount" NUMERIC     NOT NULL,
     "bonding_purse" VARCHAR     NOT NULL
+);
+
+CREATE TABLE "accounts"
+(
+  "account_hash" VARCHAR(64) NOT NULL PRIMARY KEY,
+  "public_key" VARCHAR(68) UNIQUE,
+  "main_purse" VARCHAR(73) NOT NULL UNIQUE
+);
+
+CREATE TABLE "purses"
+(
+    "purse" VARCHAR(73) NOT NULL PRIMARY KEY,
+    "balance" NUMERIC
 );
 
 ALTER TABLE "delegators"
@@ -124,21 +137,21 @@ WHERE timestamp >= NOW() - INTERVAL '14 DAY'
 GROUP BY day;
 
 CREATE VIEW total_rewards AS
-SELECT sum(amount::BIGINT) as total_rewards
+SELECT sum(amount::NUMERIC) as total_rewards
 FROM rewards;
 
-CREATE FUNCTION era_rewards(eraid integer) RETURNS BIGINT AS
+CREATE FUNCTION era_rewards(eraid integer) RETURNS NUMERIC AS
 $$
-SELECT sum(amount::BIGINT)
+SELECT sum(amount::NUMERIC)
 FROM rewards
 where era = eraid;
 $$ LANGUAGE SQL;
 
-CREATE FUNCTION total_validator_rewards(publickey VARCHAR(66), OUT validator_rewards bigint,
-                                        OUT total_rewards bigint) AS
+CREATE FUNCTION total_validator_rewards(publickey VARCHAR(68), OUT validator_rewards NUMERIC,
+                                        OUT total_rewards NUMERIC) AS
 $$
-SELECT sum(amount::BIGINT)                  as total_rewards,
-       (SELECT sum(amount::BIGINT)
+SELECT sum(amount::NUMERIC)                  as total_rewards,
+       (SELECT sum(amount::NUMERIC)
         FROM rewards
         where validator_public_key = publickey
           and delegator_public_key is null) as validator_rewards
@@ -146,31 +159,31 @@ FROM rewards
 where validator_public_key = publickey;
 $$ LANGUAGE SQL;
 
-CREATE FUNCTION total_account_rewards(publickey VARCHAR(66)) RETURNS BIGINT AS
+CREATE FUNCTION total_account_rewards(publickey VARCHAR(68)) RETURNS NUMERIC AS
 $$
-SELECT sum(amount::BIGINT)
+SELECT sum(amount::NUMERIC)
 FROM rewards
 where delegator_public_key = publickey;
 $$ LANGUAGE SQL;
 
-CREATE FUNCTION block_details(blockhash VARCHAR(64), OUT total bigint, OUT success bigint, OUT failed bigint,
-                              OUT total_cost bigint) AS
+CREATE FUNCTION block_details(blockhash VARCHAR(64), OUT total NUMERIC, OUT success NUMERIC, OUT failed NUMERIC,
+                              OUT total_cost NUMERIC) AS
 $$
 SELECT count(*)                                                                   as total,
        (SELECT count(*) from deploys where block = blockhash and result is true)  as success,
        (SELECT count(*) from deploys where block = blockhash and result is false) as failed,
-       sum(cost::BIGINT)                                                          as total_cost
+       sum(cost::NUMERIC)                                                          as total_cost
 FROM deploys
 where block = blockhash;
 $$ LANGUAGE SQL;
 
-CREATE FUNCTION contract_details(contracthash VARCHAR(64), OUT total bigint, OUT success bigint, OUT failed bigint,
-                                 OUT total_cost bigint) AS
+CREATE FUNCTION contract_details(contracthash VARCHAR(64), OUT total NUMERIC, OUT success NUMERIC, OUT failed NUMERIC,
+                                 OUT total_cost NUMERIC) AS
 $$
 SELECT count(*)                                                                              as total,
        (SELECT count(*) from deploys where contract_hash = contracthash and result is true)  as success,
        (SELECT count(*) from deploys where contract_hash = contracthash and result is false) as failed,
-       sum(cost::BIGINT)                                                                     as total_cost
+       sum(cost::NUMERIC)                                                                     as total_cost
 FROM deploys
 where contract_hash = contracthash;
 $$ LANGUAGE SQL;
@@ -179,19 +192,21 @@ CREATE ROLE web_anon NOLOGIN;
 
 grant usage on schema public to web_anon;
 grant select on public.blocks to web_anon;
+grant select on public.raw_blocks to web_anon;
+grant select on public.deploys to web_anon;
+grant select on public.raw_deploys to web_anon;
 grant select on public.contract_packages to web_anon;
 grant select on public.contracts to web_anon;
-grant select on public.deploys to web_anon;
-grant select on public.raw_blocks to web_anon;
-grant select on public.raw_deploys to web_anon;
-grant select on public.full_stats to web_anon;
-grant select on public.simple_stats to web_anon;
 grant select on public.rewards to web_anon;
-grant select on public.total_rewards to web_anon;
 grant select on public.bids to web_anon;
 grant select on public.delegators to web_anon;
+grant select on public.accounts to web_anon;
+grant select on public.purses to web_anon;
+grant select on public.full_stats to web_anon;
+grant select on public.simple_stats to web_anon;
+grant select on public.total_rewards to web_anon;
 grant execute on function era_rewards(integer) to web_anon;
+grant execute on function total_validator_rewards(VARCHAR(68)) to web_anon;
+grant execute on function total_account_rewards(VARCHAR(68)) to web_anon;
 grant execute on function block_details(VARCHAR(64)) to web_anon;
 grant execute on function contract_details(VARCHAR(64)) to web_anon;
-grant execute on function total_validator_rewards(VARCHAR(66)) to web_anon;
-grant execute on function total_account_rewards(VARCHAR(66)) to web_anon;

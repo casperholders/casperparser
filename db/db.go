@@ -270,6 +270,93 @@ func (db *DB) InsertContract(ctx context.Context, hash string, packageHash strin
 	return nil
 }
 
+// InsertAccountHash in the database
+func (db *DB) InsertAccountHash(ctx context.Context, hash string, purse string) error {
+	hash = strings.ToLower(hash)
+	const sql = `INSERT INTO accounts ("public_key", "account_hash", "main_purse")
+	VALUES ($1, $2, $3)
+	ON CONFLICT (account_hash)
+	DO UPDATE
+	SET public_key = $1,
+	main_purse = $3;`
+	switch _, err := db.Postgres.Exec(ctx, sql, nil, hash, purse); {
+	case errors.Is(err, context.Canceled), errors.Is(err, context.DeadlineExceeded):
+		return err
+	case err != nil:
+		if sqlErr := db.blockPgError(err); sqlErr != nil {
+			return sqlErr
+		}
+		log.Printf("cannot create contract on database: %v\n", err)
+		return errors.New("cannot create contract on database")
+	}
+	return nil
+}
+
+// InsertAccount in the database
+func (db *DB) InsertAccount(ctx context.Context, publicKey string, hash string, purse string) error {
+	hash = strings.ToLower(hash)
+	const sql = `INSERT INTO accounts ("public_key", "account_hash", "main_purse")
+	VALUES ($1, $2, $3)
+	ON CONFLICT (account_hash)
+	DO UPDATE
+	SET public_key = $1,
+	main_purse = $3;`
+	switch _, err := db.Postgres.Exec(ctx, sql, publicKey, hash, purse); {
+	case errors.Is(err, context.Canceled), errors.Is(err, context.DeadlineExceeded):
+		return err
+	case err != nil:
+		if sqlErr := db.blockPgError(err); sqlErr != nil {
+			return sqlErr
+		}
+		log.Printf("cannot create contract on database: %v\n", err)
+		return errors.New("cannot create contract on database")
+	}
+	return nil
+}
+
+// InsertPurse in the database
+func (db *DB) InsertPurse(ctx context.Context, hash string) error {
+	hash = strings.ToLower(hash)
+	const sql = `INSERT INTO purses ("purse", "balance")
+	VALUES ($1, $2)
+	ON CONFLICT (purse)
+	DO UPDATE
+	SET balance = $2;`
+	switch _, err := db.Postgres.Exec(ctx, sql, hash, nil); {
+	case errors.Is(err, context.Canceled), errors.Is(err, context.DeadlineExceeded):
+		return err
+	case err != nil:
+		if sqlErr := db.blockPgError(err); sqlErr != nil {
+			return sqlErr
+		}
+		log.Printf("cannot create contract on database: %v\n", err)
+		return errors.New("cannot create contract on database")
+	}
+	return nil
+}
+
+// InsertPurseBalance in the database
+func (db *DB) InsertPurseBalance(ctx context.Context, hash string, balance string) error {
+	hash = strings.ToLower(hash)
+
+	const sql = `INSERT INTO purses ("purse", "balance")
+	VALUES ($1, $2)
+	ON CONFLICT (purse)
+	DO UPDATE
+	SET balance = $2;`
+	switch _, err := db.Postgres.Exec(ctx, sql, hash, balance); {
+	case errors.Is(err, context.Canceled), errors.Is(err, context.DeadlineExceeded):
+		return err
+	case err != nil:
+		if sqlErr := db.blockPgError(err); sqlErr != nil {
+			return sqlErr
+		}
+		log.Printf("cannot create contract on database: %v\n", err)
+		return errors.New("cannot create contract on database")
+	}
+	return nil
+}
+
 // InsertRewards in the database
 func (db *DB) InsertRewards(ctx context.Context, rowsToInsert [][]interface{}) error {
 	copyCount, err := db.Postgres.CopyFrom(

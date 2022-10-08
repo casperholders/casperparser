@@ -85,14 +85,14 @@ CREATE TABLE "delegators"
 
 CREATE TABLE "accounts"
 (
-  "account_hash" VARCHAR(64) NOT NULL PRIMARY KEY,
-  "public_key" VARCHAR(68) UNIQUE,
-  "main_purse" VARCHAR(73) NOT NULL UNIQUE
+    "account_hash" VARCHAR(64) NOT NULL PRIMARY KEY,
+    "public_key"   VARCHAR(68) UNIQUE,
+    "main_purse"   VARCHAR(73) NOT NULL UNIQUE
 );
 
 CREATE TABLE "purses"
 (
-    "purse" VARCHAR(73) NOT NULL PRIMARY KEY,
+    "purse"   VARCHAR(73) NOT NULL PRIMARY KEY,
     "balance" NUMERIC
 );
 
@@ -140,6 +140,46 @@ CREATE VIEW total_rewards AS
 SELECT sum(amount::NUMERIC) as total_rewards
 FROM rewards;
 
+CREATE VIEW stakers AS
+WITH publicKeys as (SELECT DISTINCT public_key
+                    FROM delegators)
+SELECT COUNT(*)
+from publicKeys;
+
+CREATE VIEW mouvements AS
+SELECT 'delegate'                                                as type,
+       FLOOR(SUM((metadata ->> 'amount')::numeric) / 1000000000) as count,
+       date_trunc('day', timestamp)                              as day
+from deploys
+WHERE timestamp >= NOW() - INTERVAL '14 DAY'
+  and metadata_type = 'delegate'
+  AND result is true
+GROUP BY day
+UNION
+SELECT 'undelegate'                                              as type,
+       FLOOR(SUM((metadata ->> 'amount')::numeric) / 1000000000) as count,
+       date_trunc('day', timestamp)                              as day
+from deploys
+WHERE timestamp >= NOW() - INTERVAL '14 DAY'
+  and metadata_type = 'undelegate'
+  AND result is true
+GROUP BY day
+UNION
+SELECT 'transfer'                                                as type,
+       FLOOR(SUM((metadata ->> 'amount')::numeric) / 1000000000) as count,
+       date_trunc('day', timestamp)                              as day
+from deploys
+WHERE timestamp >= NOW() - INTERVAL '14 DAY'
+  and type = 'transfer'
+  AND result is true
+GROUP BY day;
+
+CREATE VIEW rich_list AS
+SELECT *
+from purses
+         FULL JOIN accounts ON purses.purse = accounts.main_purse
+ORDER BY balance desc;
+
 CREATE FUNCTION era_rewards(eraid integer) RETURNS NUMERIC AS
 $$
 SELECT sum(amount::NUMERIC)
@@ -150,7 +190,7 @@ $$ LANGUAGE SQL;
 CREATE FUNCTION total_validator_rewards(publickey VARCHAR(68), OUT validator_rewards NUMERIC,
                                         OUT total_rewards NUMERIC) AS
 $$
-SELECT sum(amount::NUMERIC)                  as total_rewards,
+SELECT sum(amount::NUMERIC)                 as total_rewards,
        (SELECT sum(amount::NUMERIC)
         FROM rewards
         where validator_public_key = publickey
@@ -172,7 +212,7 @@ $$
 SELECT count(*)                                                                   as total,
        (SELECT count(*) from deploys where block = blockhash and result is true)  as success,
        (SELECT count(*) from deploys where block = blockhash and result is false) as failed,
-       sum(cost::NUMERIC)                                                          as total_cost
+       sum(cost::NUMERIC)                                                         as total_cost
 FROM deploys
 where block = blockhash;
 $$ LANGUAGE SQL;
@@ -183,7 +223,7 @@ $$
 SELECT count(*)                                                                              as total,
        (SELECT count(*) from deploys where contract_hash = contracthash and result is true)  as success,
        (SELECT count(*) from deploys where contract_hash = contracthash and result is false) as failed,
-       sum(cost::NUMERIC)                                                                     as total_cost
+       sum(cost::NUMERIC)                                                                    as total_cost
 FROM deploys
 where contract_hash = contracthash;
 $$ LANGUAGE SQL;
@@ -205,6 +245,9 @@ grant select on public.purses to web_anon;
 grant select on public.full_stats to web_anon;
 grant select on public.simple_stats to web_anon;
 grant select on public.total_rewards to web_anon;
+grant select on public.stakers to web_anon;
+grant select on public.mouvements to web_anon;
+grant select on public.rich_list to web_anon;
 grant execute on function era_rewards(integer) to web_anon;
 grant execute on function total_validator_rewards(VARCHAR(68)) to web_anon;
 grant execute on function total_account_rewards(VARCHAR(68)) to web_anon;

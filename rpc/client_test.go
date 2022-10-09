@@ -70,3 +70,24 @@ func TestClient_GetEraInfo(t *testing.T) {
 		t.Errorf("Should be nil")
 	}
 }
+
+func TestClient_GetAuction(t *testing.T) {
+	_, err := rpcClient.GetAuction()
+	if err != nil {
+		t.Errorf("Unable to retrieve auction info %s", err)
+	}
+}
+
+func TestClient_GetMainPurse(t *testing.T) {
+	_, err := rpcClient.GetMainPurse("account-hash-fa12d2dd5547714f8c2754d418aa8c9d59dc88780350cb4254d622e2d4ef7e69")
+	if err != nil {
+		t.Errorf("Unable to retrieve main purse info %s", err)
+	}
+}
+
+func TestClient_GetPurseBalance(t *testing.T) {
+	_, err := rpcClient.GetPurseBalance("uref-bb9f47c30ddbe192438fad10b7db8200247529d6592af7159d92c5f3aa7716a1-007")
+	if err != nil {
+		t.Errorf("Unable to retrieve balance %s", err)
+	}
+}

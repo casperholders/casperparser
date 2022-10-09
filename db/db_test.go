@@ -82,4 +82,59 @@ func TestDB(t *testing.T) {
 			t.Errorf("Unable to GetDeploy : %s", err)
 		}
 	})
+	t.Run("Should Insert Auction", func(t *testing.T) {
+		bidRow := [][]interface{}{{"publickey", "purse", 1, 1, false}}
+		delegatorRow := [][]interface{}{{"publickey", "validator", 1, "purse"}}
+		err = db.InsertAuction(context.Background(), bidRow, delegatorRow)
+		if err != nil {
+			t.Errorf("Unable to Insert Auction : %s", err)
+		}
+	})
+	t.Run("Should Insert Contract package", func(t *testing.T) {
+		err = db.InsertContractPackage(context.Background(), "packageHash", "deploy", "from", "{}")
+		if err != nil {
+			t.Errorf("Unable to Insert Contract Package : %s", err)
+		}
+	})
+	t.Run("Should Insert Contract", func(t *testing.T) {
+		err = db.InsertContract(context.Background(), "hash", "packageHash", "deploy", "from", "contractType", 1.0, "{}")
+		if err != nil {
+			t.Errorf("Unable to InsertContract : %s", err)
+		}
+	})
+	t.Run("Should InsertAccountHash", func(t *testing.T) {
+		err = db.InsertAccountHash(context.Background(), "hash", "purse")
+		if err != nil {
+			t.Errorf("Unable to InsertContract : %s", err)
+		}
+	})
+	t.Run("Should InsertAccount", func(t *testing.T) {
+		err = db.InsertAccount(context.Background(), "publicKey", "hash", "purse")
+		if err != nil {
+			t.Errorf("Unable to InsertContract : %s", err)
+		}
+	})
+	t.Run("Should InsertPurse", func(t *testing.T) {
+		err = db.InsertPurse(context.Background(), "hash")
+		if err != nil {
+			t.Errorf("Unable to InsertContract : %s", err)
+		}
+	})
+	t.Run("Should InsertPurseBalance", func(t *testing.T) {
+		err = db.InsertPurseBalance(context.Background(), "hash", "1")
+		if err != nil {
+			t.Errorf("Unable to InsertContract : %s", err)
+		}
+	})
+	t.Run("Should InsertRewards", func(t *testing.T) {
+		row := [][]interface{}{{"96b82d76f04b36ba1a83e004e03d862568dec5618620155ca8b53177d415f731", 1, "dpk", "vpk", "amount"}}
+		err = db.InsertRewards(context.Background(), row)
+		if err != nil {
+			t.Errorf("Unable to InsertContract : %s", err)
+		}
+		_, err = db.Postgres.Exec(context.Background(), `DELETE FROM rewards`)
+		if err != nil {
+			t.Errorf("%s", err)
+		}
+	})
 }

@@ -57,4 +57,20 @@ func TestHandleBlockRawTask(t *testing.T) {
 	if err != nil {
 		t.Errorf("Unable to run HandleBlockRawTask : %s", err)
 	}
+	task, err = NewBlockRawTask(1153698)
+	if err != nil {
+		t.Errorf("Unable to create a NewBlockRawTask : %s", err)
+	}
+	err = HandleBlockRawTask(context.Background(), task)
+	if err != nil {
+		t.Errorf("Unable to run HandleBlockRawTask : %s", err)
+	}
+	task, err = NewBlockVerifyTask("fc204a0bc7788604fd0ded0ac19a73b687d12a8d735ccf57f3c65ce58d6f4d1f")
+	if err != nil {
+		t.Errorf("Unable to create a NewBlockRawTask : %s", err)
+	}
+	err = HandleBlockVerifyTask(context.Background(), task)
+	if err != nil {
+		t.Errorf("Unable to run HandleBlockRawTask : %s", err)
+	}
 }

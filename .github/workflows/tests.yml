@@ -47,6 +47,12 @@ jobs:
           EOF
       - run: make run_migrate
       - run: make codecov
+      - name: Archive code coverage results
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: code-coverage-report
+          path: report.json
       - uses: codecov/codecov-action@v3
       - name: SonarCloud Scan
         uses: sonarsource/sonarcloud-github-action@master

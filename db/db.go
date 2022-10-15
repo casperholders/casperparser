@@ -63,17 +63,8 @@ func (db *DB) InsertBlock(ctx context.Context, hash string, era int, timestamp s
 	height = $4,
 	era_end = $5,
 	validated = $6;`
-	switch _, err := db.Postgres.Exec(ctx, sql, hash, era, timestamp, height, eraEnd, false); {
-	case errors.Is(err, context.Canceled), errors.Is(err, context.DeadlineExceeded):
-		return err
-	case err != nil:
-		if sqlErr := db.blockPgError(err); sqlErr != nil {
-			return sqlErr
-		}
-		log.Printf("cannot create block on database: %v\n", err)
-		return errors.New("cannot create block on database")
-	}
-	return nil
+	_, err = db.Postgres.Exec(ctx, sql, hash, era, timestamp, height, eraEnd, false)
+	return db.checkErr(err)
 }
 
 // InsertRawBlock in the database
@@ -84,17 +75,8 @@ func (db *DB) InsertRawBlock(ctx context.Context, hash string, json string) erro
 	ON CONFLICT (hash)
 	DO UPDATE
 	SET data = $2;`
-	switch _, err := db.Postgres.Exec(ctx, sql, hash, json); {
-	case errors.Is(err, context.Canceled), errors.Is(err, context.DeadlineExceeded):
-		return err
-	case err != nil:
-		if sqlErr := db.blockPgError(err); sqlErr != nil {
-			return sqlErr
-		}
-		log.Printf("cannot create raw block on database: %v\n", err)
-		return errors.New("cannot create raw block on database")
-	}
-	return nil
+	_, err := db.Postgres.Exec(ctx, sql, hash, json)
+	return db.checkErr(err)
 }
 
 // InsertDeploy in the database
@@ -109,38 +91,27 @@ func (db *DB) InsertDeploy(ctx context.Context, hash string, from string, cost s
 
 func (db *DB) InsertAuction(ctx context.Context, rowsToInsertBids [][]interface{}, rowsToInsertDelegators [][]interface{}) error {
 	const sql = `TRUNCATE bids; TRUNCATE delegators;`
-	switch _, err := db.Postgres.Exec(ctx, sql); {
-	case errors.Is(err, context.Canceled), errors.Is(err, context.DeadlineExceeded):
-		return err
-	case err != nil:
-		if sqlErr := db.blockPgError(err); sqlErr != nil {
-			return sqlErr
-		}
-		log.Printf("cannot truncate bids & delegators: %v\n", err)
-		return errors.New("cannot truncate bids & delegators")
+	_, err := db.Postgres.Exec(ctx, sql)
+	if db.checkErr(err) != nil {
+		return db.checkErr(err)
 	}
 
-	copyCount, err := db.Postgres.CopyFrom(
+	_, err = db.Postgres.CopyFrom(
 		ctx,
 		pgx.Identifier{"bids"},
 		[]string{"public_key", "bonding_purse", "staked_amount", "delegation_rate", "inactive"},
 		pgx.CopyFromRows(rowsToInsertBids),
 	)
-	log.Printf("Inserted %v rows into bids", copyCount)
-	if err != nil {
-		return err
+	if db.checkErr(err) != nil {
+		return db.checkErr(err)
 	}
-	copyCount, err = db.Postgres.CopyFrom(
+	_, err = db.Postgres.CopyFrom(
 		ctx,
 		pgx.Identifier{"delegators"},
 		[]string{"public_key", "delegatee", "staked_amount", "bonding_purse"},
 		pgx.CopyFromRows(rowsToInsertDelegators),
 	)
-	log.Printf("Inserted %v rows into delegators", copyCount)
-	if err != nil {
-		return err
-	}
-	return nil
+	return db.checkErr(err)
 }
 
 // UpdateDeploy in the database
@@ -187,17 +158,8 @@ func (db *DB) UpdateDeploy(ctx context.Context, hash string, from string, cost s
 	if entrypoint != "" {
 		ep = &entrypoint
 	}
-	switch _, err := db.Postgres.Exec(ctx, sql, hash, from, cost, result, timestamp, block, deployType, metadataType, ch, cn, ep, m, e); {
-	case errors.Is(err, context.Canceled), errors.Is(err, context.DeadlineExceeded):
-		return err
-	case err != nil:
-		if sqlErr := db.blockPgError(err); sqlErr != nil {
-			return sqlErr
-		}
-		log.Printf("cannot create/update deploy on database: %v\n", err)
-		return errors.New("cannot create/update deploy on database")
-	}
-	return nil
+	_, err := db.Postgres.Exec(ctx, sql, hash, from, cost, result, timestamp, block, deployType, metadataType, ch, cn, ep, m, e)
+	return db.checkErr(err)
 }
 
 // InsertRawDeploy in the database
@@ -208,17 +170,8 @@ func (db *DB) InsertRawDeploy(ctx context.Context, hash string, json string) err
 	ON CONFLICT (hash)
 	DO UPDATE
 	SET data = $2;`
-	switch _, err := db.Postgres.Exec(ctx, sql, hash, json); {
-	case errors.Is(err, context.Canceled), errors.Is(err, context.DeadlineExceeded):
-		return err
-	case err != nil:
-		if sqlErr := db.blockPgError(err); sqlErr != nil {
-			return sqlErr
-		}
-		log.Printf("cannot create raw deploy on database: %v\n", err)
-		return errors.New("cannot create raw deploy on database")
-	}
-	return nil
+	_, err := db.Postgres.Exec(ctx, sql, hash, json)
+	return db.checkErr(err)
 }
 
 // InsertContractPackage in the database
@@ -231,17 +184,8 @@ func (db *DB) InsertContractPackage(ctx context.Context, hash string, deploy str
 	SET deploy = $2,
 	"from" = $3,
 	data = $4;`
-	switch _, err := db.Postgres.Exec(ctx, sql, hash, deploy, from, data); {
-	case errors.Is(err, context.Canceled), errors.Is(err, context.DeadlineExceeded):
-		return err
-	case err != nil:
-		if sqlErr := db.blockPgError(err); sqlErr != nil {
-			return sqlErr
-		}
-		log.Printf("cannot create contract package on database: %v\n", err)
-		return errors.New("cannot create contract package on database")
-	}
-	return nil
+	_, err := db.Postgres.Exec(ctx, sql, hash, deploy, from, data)
+	return db.checkErr(err)
 }
 
 // InsertContract in the database
@@ -258,17 +202,8 @@ func (db *DB) InsertContract(ctx context.Context, hash string, packageHash strin
 	type = $5,
 	score = $6,
 	data = $7;`
-	switch _, err := db.Postgres.Exec(ctx, sql, hash, packageHash, deploy, from, contractType, score, data); {
-	case errors.Is(err, context.Canceled), errors.Is(err, context.DeadlineExceeded):
-		return err
-	case err != nil:
-		if sqlErr := db.blockPgError(err); sqlErr != nil {
-			return sqlErr
-		}
-		log.Printf("cannot create contract on database: %v\n", err)
-		return errors.New("cannot create contract on database")
-	}
-	return nil
+	_, err := db.Postgres.Exec(ctx, sql, hash, packageHash, deploy, from, contractType, score, data)
+	return db.checkErr(err)
 }
 
 // InsertAccountHash in the database
@@ -280,17 +215,8 @@ func (db *DB) InsertAccountHash(ctx context.Context, hash string, purse string) 
 	DO UPDATE
 	SET public_key = $1,
 	main_purse = $3;`
-	switch _, err := db.Postgres.Exec(ctx, sql, nil, hash, purse); {
-	case errors.Is(err, context.Canceled), errors.Is(err, context.DeadlineExceeded):
-		return err
-	case err != nil:
-		if sqlErr := db.blockPgError(err); sqlErr != nil {
-			return sqlErr
-		}
-		log.Printf("cannot create contract on database: %v\n", err)
-		return errors.New("cannot create contract on database")
-	}
-	return nil
+	_, err := db.Postgres.Exec(ctx, sql, nil, hash, purse)
+	return db.checkErr(err)
 }
 
 // InsertAccount in the database
@@ -302,17 +228,8 @@ func (db *DB) InsertAccount(ctx context.Context, publicKey string, hash string, 
 	DO UPDATE
 	SET public_key = $1,
 	main_purse = $3;`
-	switch _, err := db.Postgres.Exec(ctx, sql, publicKey, hash, purse); {
-	case errors.Is(err, context.Canceled), errors.Is(err, context.DeadlineExceeded):
-		return err
-	case err != nil:
-		if sqlErr := db.blockPgError(err); sqlErr != nil {
-			return sqlErr
-		}
-		log.Printf("cannot create contract on database: %v\n", err)
-		return errors.New("cannot create contract on database")
-	}
-	return nil
+	_, err := db.Postgres.Exec(ctx, sql, publicKey, hash, purse)
+	return db.checkErr(err)
 }
 
 // InsertPurse in the database
@@ -323,17 +240,8 @@ func (db *DB) InsertPurse(ctx context.Context, hash string) error {
 	ON CONFLICT (purse)
 	DO UPDATE
 	SET balance = $2;`
-	switch _, err := db.Postgres.Exec(ctx, sql, hash, nil); {
-	case errors.Is(err, context.Canceled), errors.Is(err, context.DeadlineExceeded):
-		return err
-	case err != nil:
-		if sqlErr := db.blockPgError(err); sqlErr != nil {
-			return sqlErr
-		}
-		log.Printf("cannot create contract on database: %v\n", err)
-		return errors.New("cannot create contract on database")
-	}
-	return nil
+	_, err := db.Postgres.Exec(ctx, sql, hash, nil)
+	return db.checkErr(err)
 }
 
 // InsertPurseBalance in the database
@@ -345,40 +253,27 @@ func (db *DB) InsertPurseBalance(ctx context.Context, hash string, balance strin
 	ON CONFLICT (purse)
 	DO UPDATE
 	SET balance = $2;`
-	switch _, err := db.Postgres.Exec(ctx, sql, hash, balance); {
-	case errors.Is(err, context.Canceled), errors.Is(err, context.DeadlineExceeded):
-		return err
-	case err != nil:
-		if sqlErr := db.blockPgError(err); sqlErr != nil {
-			return sqlErr
-		}
-		log.Printf("cannot create contract on database: %v\n", err)
-		return errors.New("cannot create contract on database")
-	}
-	return nil
+	_, err := db.Postgres.Exec(ctx, sql, hash, balance)
+	return db.checkErr(err)
 }
 
 // InsertRewards in the database
 func (db *DB) InsertRewards(ctx context.Context, rowsToInsert [][]interface{}) error {
-	copyCount, err := db.Postgres.CopyFrom(
+	_, err := db.Postgres.CopyFrom(
 		ctx,
 		pgx.Identifier{"rewards"},
 		[]string{"block", "era", "delegator_public_key", "validator_public_key", "amount"},
 		pgx.CopyFromRows(rowsToInsert),
 	)
-	log.Printf("Inserted %v rows into rewards", copyCount)
-	if err != nil {
-		return err
-	}
-	return nil
+	return db.checkErr(err)
 }
 
 // GetMissingBlocks from the database
 func (db *DB) GetMissingBlocks(ctx context.Context) ([]int, error) {
 	const sql = `SELECT all_ids AS missing_ids FROM generate_series((SELECT MIN(height) FROM blocks), (SELECT MAX(height) FROM blocks)) all_ids EXCEPT SELECT height FROM blocks;`
 	rows, err := db.Postgres.Query(ctx, sql)
-	if err != nil {
-		return []int{}, err
+	if db.checkErr(err) != nil {
+		return []int{}, db.checkErr(err)
 	}
 	defer rows.Close()
 	var missingDeploys []int
@@ -386,20 +281,20 @@ func (db *DB) GetMissingBlocks(ctx context.Context) ([]int, error) {
 		missing := struct {
 			id int
 		}{}
-		err := rows.Scan(&missing.id)
-		if err != nil {
-			return []int{}, err
+		err = rows.Scan(&missing.id)
+		if db.checkErr(err) != nil {
+			return []int{}, db.checkErr(err)
 		}
 
 		log.Printf("Missing block found: id=%d ", missing.id)
 		missingDeploys = append(missingDeploys, missing.id)
 	}
 	// check rows.Err() after the last rows.Next() :
-	if err := rows.Err(); err != nil {
+	if err = rows.Err(); db.checkErr(err) != nil {
+		return []int{}, db.checkErr(err)
 		// on top of errors triggered by bad conditions on the 'rows.Scan()' call,
 		// there could also be some bad things like a truncated response because
 		// of some network error, etc ...
-		return []int{}, err
 	}
 	return missingDeploys, nil
 }
@@ -409,8 +304,8 @@ func (db *DB) GetMissingMetadataDeploysHash(ctx context.Context) ([]string, erro
 	const sql = `SELECT hash FROM deploys WHERE metadata IS NULL;`
 
 	rows, err := db.Postgres.Query(ctx, sql)
-	if err != nil {
-		return []string{}, err
+	if db.checkErr(err) != nil {
+		return []string{}, db.checkErr(err)
 	}
 	defer rows.Close()
 	var missingDeploys []string
@@ -418,18 +313,18 @@ func (db *DB) GetMissingMetadataDeploysHash(ctx context.Context) ([]string, erro
 		missing := struct {
 			hash string
 		}{}
-		err := rows.Scan(&missing.hash)
-		if err != nil {
-			return []string{}, err
+		err = rows.Scan(&missing.hash)
+		if db.checkErr(err) != nil {
+			return []string{}, db.checkErr(err)
 		}
 		missingDeploys = append(missingDeploys, missing.hash)
 	}
 	// check rows.Err() after the last rows.Next() :
-	if err := rows.Err(); err != nil {
+	if err = rows.Err(); db.checkErr(err) != nil {
+		return []string{}, db.checkErr(err)
 		// on top of errors triggered by bad conditions on the 'rows.Scan()' call,
 		// there could also be some bad things like a truncated response because
 		// of some network error, etc ...
-		return []string{}, err
 	}
 	return missingDeploys, nil
 }
@@ -438,17 +333,15 @@ func (db *DB) GetMissingMetadataDeploysHash(ctx context.Context) ([]string, erro
 func (db *DB) GetDeploy(ctx context.Context, hash string) (deploy.Result, error) {
 	const sql = `SELECT data FROM raw_deploys WHERE hash = $1;`
 	rows, err := db.Postgres.Query(ctx, sql, hash)
-	if err != nil {
-		log.Println(err)
-		return deploy.Result{}, err
+	if db.checkErr(err) != nil {
+		return deploy.Result{}, db.checkErr(err)
 	}
 	defer rows.Close()
 	var d deploy.Result
 	for rows.Next() {
-		err := rows.Scan(&d)
-		if err != nil {
-			log.Println(err)
-			return deploy.Result{}, err
+		err = rows.Scan(&d)
+		if db.checkErr(err) != nil {
+			return deploy.Result{}, db.checkErr(err)
 		}
 	}
 	return d, nil
@@ -458,17 +351,15 @@ func (db *DB) GetDeploy(ctx context.Context, hash string) (deploy.Result, error)
 func (db *DB) GetRawBlock(ctx context.Context, hash string) (block.Result, error) {
 	const sql = `SELECT data FROM raw_blocks WHERE hash = $1;`
 	rows, err := db.Postgres.Query(ctx, sql, hash)
-	if err != nil {
-		log.Println(err)
-		return block.Result{}, err
+	if db.checkErr(err) != nil {
+		return block.Result{}, db.checkErr(err)
 	}
 	defer rows.Close()
 	var d block.Result
 	for rows.Next() {
-		err := rows.Scan(&d)
-		if err != nil {
-			log.Println(err)
-			return block.Result{}, err
+		err = rows.Scan(&d)
+		if db.checkErr(err) != nil {
+			return block.Result{}, db.checkErr(err)
 		}
 	}
 	return d, nil
@@ -487,17 +378,15 @@ func (db *DB) CountDeploys(ctx context.Context, hashes []string) (int, error) {
 		genericHashes[i] = v
 	}
 	rows, err := db.Postgres.Query(ctx, sql, genericHashes...)
-	if err != nil {
-		log.Println(err)
-		return 0, err
+	if db.checkErr(err) != nil {
+		return 0, db.checkErr(err)
 	}
 	defer rows.Close()
 	var d int
 	for rows.Next() {
-		err := rows.Scan(&d)
-		if err != nil {
-			log.Println(err)
-			return 0, err
+		err = rows.Scan(&d)
+		if db.checkErr(err) != nil {
+			return 0, db.checkErr(err)
 		}
 	}
 	return d, nil
@@ -506,17 +395,8 @@ func (db *DB) CountDeploys(ctx context.Context, hashes []string) (int, error) {
 // ValidateBlock from the database
 func (db *DB) ValidateBlock(ctx context.Context, hash string) error {
 	const sql = `UPDATE blocks SET validated = true WHERE hash = $1;`
-	switch _, err := db.Postgres.Exec(ctx, sql, hash); {
-	case errors.Is(err, context.Canceled), errors.Is(err, context.DeadlineExceeded):
-		return err
-	case err != nil:
-		if sqlErr := db.blockPgError(err); sqlErr != nil {
-			return sqlErr
-		}
-		log.Printf("cannot validate block on database: %v\n", err)
-		return errors.New("cannot validate block on database")
-	}
-	return nil
+	_, err := db.Postgres.Exec(ctx, sql, hash)
+	return db.checkErr(err)
 }
 
 func (db *DB) blockPgError(err error) error {
@@ -549,4 +429,18 @@ func (l *PGXStdLogger) Log(ctx context.Context, level pgx.LogLevel, msg string, 
 		args = append(args, fmt.Sprintf("%s=%v", k, v))
 	}
 	log.Println(args...)
+}
+
+func (db *DB) checkErr(err error) error {
+	if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
+		return err
+	}
+	if err != nil {
+		if sqlErr := db.blockPgError(err); sqlErr != nil {
+			return sqlErr
+		}
+		log.Printf("db error : %v\n", err)
+		return errors.New("db error")
+	}
+	return nil
 }

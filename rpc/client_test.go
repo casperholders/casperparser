@@ -91,3 +91,14 @@ func TestClient_GetPurseBalance(t *testing.T) {
 		t.Errorf("Unable to retrieve balance %s", err)
 	}
 }
+
+func TestClient_GetUrefValue(t *testing.T) {
+	_, _, err := rpcClient.GetUrefValue("uref-bb9f47c30ddbe192438fad10b7db8200247529d6592af7159d92c5f3aa7716a1-007")
+	if err != nil {
+		t.Errorf("Unable to retrieve uref %s", err)
+	}
+	_, _, err = rpcClient.GetUrefValue("uref-d4a9e949503f14a524ee5a163386aec4ff231b87e4e856f68d8840432ecd693e-007")
+	if err != nil {
+		t.Errorf("Unable to retrieve uref %s", err)
+	}
+}

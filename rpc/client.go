@@ -259,6 +259,35 @@ func (c *Client) GetEraInfo(hash string) (reward.Result, error) {
 	return rewardParsed, nil
 }
 
+// GetUrefValue from the casper blockchain
+func (c *Client) GetUrefValue(hash string) (string, bool, error) {
+	srh, err := c.GetStateRootHash(true)
+	if err != nil {
+		return "", false, fmt.Errorf("failed to get result: %w", err)
+	}
+
+	resp, err := c.RpcCall("state_get_item", []string{srh, hash})
+	if err != nil {
+		return "", false, err
+	}
+	var parsedUref uref
+	err = json.Unmarshal(resp.Result, &parsedUref)
+	if err != nil {
+		return "", false, err
+	}
+	if parsedUref.StoredValue.CLValue.Parsed == nil {
+		balance, errB := c.GetPurseBalance(hash)
+		if errB == nil {
+			return balance, true, nil
+		}
+	}
+	b, err := json.Marshal(parsedUref.StoredValue.CLValue.Parsed)
+	if err != nil {
+		return "", false, err
+	}
+	return string(b), false, nil
+}
+
 type Request struct {
 	Version string      `json:"jsonrpc"`
 	Id      string      `json:"id"`
@@ -297,6 +326,18 @@ type mainPurse struct {
 	} `json:"stored_value"`
 }
 
+type uref struct {
+	StoredValue struct {
+		CLValue struct {
+			Parsed interface{} `json:"parsed"`
+		} `json:"CLValue"`
+	} `json:"stored_value"`
+}
+
 type purseBalance struct {
 	BalanceValue string `json:"balance_value"`
+}
+
+type urefValue struct {
+	Value interface{} `json:"value"`
 }

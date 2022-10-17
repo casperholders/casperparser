@@ -56,6 +56,21 @@ CREATE TABLE "contracts"
     "data"    jsonb       NOT NULL
 );
 
+CREATE TABLE "named_keys"
+(
+    "uref"          VARCHAR(77) PRIMARY KEY,
+    "name"          VARCHAR NOT NULL,
+    "is_purse"      BOOLEAN NOT NULL,
+    "initial_value" jsonb
+);
+
+CREATE TABLE "contracts_named_keys"
+(
+    contract_hash  VARCHAR(64) references contracts (hash),
+    named_key_uref VARCHAR(77) references named_keys (uref),
+    primary key (contract_hash, named_key_uref)
+);
+
 
 CREATE TABLE "rewards"
 (
@@ -237,6 +252,8 @@ grant select on public.deploys to web_anon;
 grant select on public.raw_deploys to web_anon;
 grant select on public.contract_packages to web_anon;
 grant select on public.contracts to web_anon;
+grant select on public.named_keys to web_anon;
+grant select on public.contracts_named_keys to web_anon;
 grant select on public.rewards to web_anon;
 grant select on public.bids to web_anon;
 grant select on public.delegators to web_anon;

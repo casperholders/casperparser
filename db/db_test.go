@@ -102,6 +102,12 @@ func TestDB(t *testing.T) {
 			t.Errorf("Unable to InsertContract : %s", err)
 		}
 	})
+	t.Run("Should Insert NamedKey", func(t *testing.T) {
+		err = db.InsertNamedKey(context.Background(), "test", "test", false, "null", "hash")
+		if err != nil {
+			t.Errorf("Unable to InsertNamedKey : %s", err)
+		}
+	})
 	t.Run("Should InsertAccountHash", func(t *testing.T) {
 		err = db.InsertAccountHash(context.Background(), "hash", "purse")
 		if err != nil {

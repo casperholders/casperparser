@@ -206,6 +206,25 @@ func (db *DB) InsertContract(ctx context.Context, hash string, packageHash strin
 	return db.checkErr(err)
 }
 
+// InsertNamedKey in the database
+func (db *DB) InsertNamedKey(ctx context.Context, uref string, name string, isPurse bool, initialValue string, contractHash string) error {
+	contractHash = strings.ToLower(contractHash)
+	const sql = `INSERT INTO named_keys ("uref", "name", "is_purse", "initial_value")
+	VALUES ($1, $2, $3, $4)
+	ON CONFLICT (uref)
+	DO UPDATE
+	SET name = $2,
+	is_purse = $3,    
+	initial_value = $4;`
+	_, err := db.Postgres.Exec(ctx, sql, uref, name, isPurse, initialValue)
+	if err != nil {
+		return db.checkErr(err)
+	}
+	const joinsql = `INSERT INTO contracts_named_keys (contract_hash, named_key_uref) VALUES ($1, $2) ON CONFLICT DO NOTHING;`
+	_, err = db.Postgres.Exec(ctx, joinsql, contractHash, uref)
+	return db.checkErr(err)
+}
+
 // InsertAccountHash in the database
 func (db *DB) InsertAccountHash(ctx context.Context, hash string, purse string) error {
 	hash = strings.ToLower(hash)

@@ -4,12 +4,10 @@ package tasks
 import (
 	"casperParser/db"
 	"casperParser/types/contract"
-	"casperParser/types/deploy"
 	"context"
 	"encoding/json"
 	"fmt"
 	"github.com/hibiken/asynq"
-	"regexp"
 	"strings"
 )
 
@@ -39,14 +37,8 @@ func HandleContractRawTask(ctx context.Context, t *asynq.Task) error {
 		return err
 	}
 	var database = db.DB{Postgres: WorkerPool}
-	contractDeploy, err := database.GetDeploy(ctx, p.DeployHash)
-	if err != nil {
-		return err
-	}
-	retrieveNamedKeyValues(&contractParsed, contractDeploy)
-	if err != nil {
-		return err
-	}
+	namedKeys := retrieveNamedKeyValues(contractParsed)
+	contractParsed.StoredValue.Contract.NamedKeys = []contract.NamedKey{}
 	contractJsonString, err := json.Marshal(contractParsed.StoredValue)
 	if err != nil {
 		return err
@@ -56,25 +48,43 @@ func HandleContractRawTask(ctx context.Context, t *asynq.Task) error {
 	if err != nil {
 		return err
 	}
-
+	for _, namedKey := range namedKeys {
+		err = database.InsertNamedKey(ctx, namedKey.Uref, namedKey.Name, namedKey.IsPurse, namedKey.InitialValue, p.ContractHash)
+		if err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
-func retrieveNamedKeyValues(c *contract.Result, contractDeploy deploy.Result) {
-	urefsMap := contractDeploy.MapUrefs()
-	accessRights := regexp.MustCompile(`-\d{3}$`)
-	urefPrefix := regexp.MustCompile(`^uref-`)
-	for index, namedKey := range c.StoredValue.Contract.NamedKeys {
-		urefHash := accessRights.ReplaceAllString(namedKey.Key, "")
-		balanceHash := urefPrefix.ReplaceAllString(urefHash, "balance-")
-		c.StoredValue.Contract.NamedKeys[index].IsPurse = false
-		if val, ok := urefsMap[urefHash]; ok {
-			c.StoredValue.Contract.NamedKeys[index].InitialValue = val
-		}
-		if _, balance := urefsMap[balanceHash]; balance {
-			c.StoredValue.Contract.NamedKeys[index].IsPurse = true
+func retrieveNamedKeyValues(c contract.Result) []NamedKey {
+	var namedKeys []NamedKey
+	for _, namedKey := range c.StoredValue.Contract.NamedKeys {
+		if strings.Contains(namedKey.Key, "account-hash-") {
+			namedKeys = append(namedKeys, NamedKey{
+				Uref:         namedKey.Key,
+				Name:         namedKey.Name,
+				IsPurse:      false,
+				InitialValue: "null",
+			})
+		} else {
+			value, isPurse, _ := WorkerRpcClient.GetUrefValue(namedKey.Key)
+			namedKeys = append(namedKeys, NamedKey{
+				Uref:         namedKey.Key,
+				Name:         namedKey.Name,
+				IsPurse:      isPurse,
+				InitialValue: value,
+			})
 		}
 	}
+	return namedKeys
+}
+
+type NamedKey struct {
+	Uref         string
+	Name         string
+	IsPurse      bool
+	InitialValue string
 }
 
 type ContractRawPayload struct {

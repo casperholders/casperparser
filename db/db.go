@@ -278,12 +278,19 @@ func (db *DB) InsertPurseBalance(ctx context.Context, hash string, balance strin
 
 // InsertRewards in the database
 func (db *DB) InsertRewards(ctx context.Context, rowsToInsert [][]interface{}) error {
-	_, err := db.Postgres.CopyFrom(
+	count, err := db.Postgres.CopyFrom(
 		ctx,
 		pgx.Identifier{"rewards"},
 		[]string{"block", "era", "delegator_public_key", "validator_public_key", "amount"},
 		pgx.CopyFromRows(rowsToInsert),
 	)
+	if err != nil || count < int64(len(rowsToInsert)) {
+		const sql = `DELETE FROM rewards WHERE block = $1;`
+		_, errD := db.Postgres.Query(ctx, sql, rowsToInsert[0][0])
+		if db.checkErr(errD) != nil {
+			return db.checkErr(errD)
+		}
+	}
 	return db.checkErr(err)
 }
 

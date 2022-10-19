@@ -139,6 +139,33 @@ config:
         - name: "get_token_by_index"
           args: [ "owner", "index" ]
       namedkeys: [ "name", "symbol", "balances", "meta", "total_supply", "owners", "owned_tokens_by_index", "owned_indexes_by_token", "balances", "metadata", "allowances" ]
+    NFTCEP78:
+      entrypoints: #NFTCEP78 Contract definition
+        - name: "approve"
+          args: [ "operator" ]
+        - name: "balance_of"
+          args: [ "token_owner" ]
+        - name: "burn"
+          args: [ ]
+        - name: "get_approved"
+          args: [ ]
+        - name: "init"
+          args: [ "collection_name", "collection_symbol", "total_token_supply", "allow_minting", "minting_mode", "ownership_mode", "nft_kind", "holder_mode", "whitelist_mode", "contract_whitelist", "json_schema", "receipt_name", "identifier_mode", "burn_mode" ]
+        - name: "metadata"
+          args: [ ]
+        - name: "mint"
+          args: [ "token_owner", "token_meta_data" ]
+        - name: "owner_of"
+          args: [ ]
+        - name: "set_approval_for_all"
+          args: [ "token_owner", "approve_all", "operator" ]
+        - name: "set_token_metadata"
+          args: [ "token_meta_data" ]
+        - name: "set_variables"
+          args: [ "allow_minting", "contract_whitelist" ]
+        - name: "transfer"
+          args: [ "source_key", "target_key" ]
+      namedkeys: [ "allow_minting", "balances", "burn_mode", "burnt_tokens", "collection_name", "collection_symbol", "contract_whitelist", "holder_mode", "identifier_mode", "installer", "json_schema", "metadata_cep78", "metadata_custom_validated", "metadata_mutability", "metadata_nft721", "metadata_raw", "minting_mode", "nft_kind", "nft_metadata_kind", "number_of_minted_tokens", "operator", "owned_tokens", "ownership_mode", "receipt_name", "token_issuers", "token_owners", "total_token_supply", "whitelist_mode" ]
     CasperPrivateAuction:
       entrypoints: #CasperPrivateAuction Contract definition
         - name: "bid"

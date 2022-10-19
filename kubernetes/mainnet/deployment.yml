@@ -19,7 +19,7 @@ spec:
     spec:
       containers:
         - name: casperparser
-          image: killianh/casperparser
+          image: killianh/casperparser:mainnet
           imagePullPolicy: Always
           args: [ "worker" ]
           resources: { }
@@ -57,7 +57,7 @@ spec:
     spec:
       containers:
         - name: casperparser-client
-          image: killianh/casperparser
+          image: killianh/casperparser:mainnet
           imagePullPolicy: Always
           args: [ "client" ]
           resources: { }

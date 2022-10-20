@@ -243,6 +243,26 @@ FROM deploys
 where contract_hash = contracthash;
 $$ LANGUAGE SQL;
 
+CREATE FUNCTION account_ercs20(publickey VARCHAR, accounthash VARCHAR)
+    RETURNS TABLE
+            (
+                contract_hash VARCHAR(64)
+            )
+AS
+$$
+SELECT DISTINCT contract_hash
+FROM deploys
+WHERE contract_hash IN (SELECT hash from contracts where contracts.type = 'erc20' or contracts.type = 'uniswaperc20')
+  and "from" = publickey
+  and result is true
+UNION
+SELECT DISTINCT contract_hash
+FROM deploys
+WHERE contract_hash IN (SELECT hash from contracts where contracts.type = 'erc20' or contracts.type = 'uniswaperc20')
+  and metadata -> 'recipient' ->> 'Account' = accounthash
+  and result is true;
+$$ LANGUAGE SQL;
+
 CREATE ROLE web_anon NOLOGIN;
 
 grant usage on schema public to web_anon;
@@ -270,3 +290,4 @@ grant execute on function total_validator_rewards(VARCHAR(68)) to web_anon;
 grant execute on function total_account_rewards(VARCHAR(68)) to web_anon;
 grant execute on function block_details(VARCHAR(64)) to web_anon;
 grant execute on function contract_details(VARCHAR(64)) to web_anon;
+grant execute on function account_ercs20(VARCHAR, VARCHAR) to web_anon;

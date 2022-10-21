@@ -259,7 +259,33 @@ UNION
 SELECT DISTINCT contract_hash
 FROM deploys
 WHERE contract_hash IN (SELECT hash from contracts where contracts.type = 'erc20' or contracts.type = 'uniswaperc20')
-  and metadata -> 'recipient' ->> 'Account' = accounthash
+  and (metadata -> 'recipient' ->> 'Account' = accounthash
+    or metadata ->> 'recipient' = accounthash)
+  and result is true;
+$$ LANGUAGE SQL;
+
+CREATE FUNCTION erc20_holders(contracthash VARCHAR)
+    RETURNS TABLE
+            (
+                account VARCHAR
+            )
+AS
+$$
+SELECT DISTINCT "from" as account
+FROM deploys
+WHERE contract_hash = contracthash
+  and result is true
+UNION
+SELECT DISTINCT metadata -> 'recipient' ->> 'Account' as account
+FROM deploys
+WHERE contract_hash = contracthash
+  and metadata -> 'recipient' ->> 'Account' is not null
+  and result is true
+UNION
+SELECT DISTINCT metadata ->> 'recipient' as account
+FROM deploys
+WHERE contract_hash = contracthash
+  and length(metadata ->> 'recipient') = 64
   and result is true;
 $$ LANGUAGE SQL;
 
@@ -291,3 +317,4 @@ grant execute on function total_account_rewards(VARCHAR(68)) to web_anon;
 grant execute on function block_details(VARCHAR(64)) to web_anon;
 grant execute on function contract_details(VARCHAR(64)) to web_anon;
 grant execute on function account_ercs20(VARCHAR, VARCHAR) to web_anon;
+grant execute on function erc20_holders(VARCHAR) to web_anon;

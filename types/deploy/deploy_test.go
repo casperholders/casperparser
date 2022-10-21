@@ -105,8 +105,8 @@ func TestResult_GetEvents(t *testing.T) {
 			t.Errorf("Unable to unmarshal storedVersionedContractByHashDeploy deploy : %s", err)
 		}
 		events := deployResult.GetEvents()
-		if events != `{"cep47_burn_one":{"contract_package_hash":"6ca070c78d4eb468b4db4cbc5cadd815c35e15019a841c137372a88d7e247d1d","event_type":"cep47_burn_one","owner":"Key::Account(f2d3278a8d24837f23156b812d72ab7ae5ea81467efe2fb718e292756c88cd76)","token_id":"26"}}` {
-			t.Errorf("deploy events bad parsing detected. Received : %s. Expected: %s ", events, `{"cep47_burn_one":{"contract_package_hash":"6ca070c78d4eb468b4db4cbc5cadd815c35e15019a841c137372a88d7e247d1d","event_type":"cep47_burn_one","owner":"Key::Account(f2d3278a8d24837f23156b812d72ab7ae5ea81467efe2fb718e292756c88cd76)","token_id":"26"}}`)
+		if events != `[{"contract_package_hash":"6ca070c78d4eb468b4db4cbc5cadd815c35e15019a841c137372a88d7e247d1d","event_type":"cep47_burn_one","owner":"Key::Account(f2d3278a8d24837f23156b812d72ab7ae5ea81467efe2fb718e292756c88cd76)","token_id":"26"}]` {
+			t.Errorf("deploy events bad parsing detected. Received : %s. Expected: %s ", events, `[{"contract_package_hash":"6ca070c78d4eb468b4db4cbc5cadd815c35e15019a841c137372a88d7e247d1d","event_type":"cep47_burn_one","owner":"Key::Account(f2d3278a8d24837f23156b812d72ab7ae5ea81467efe2fb718e292756c88cd76)","token_id":"26"}]`)
 		}
 	})
 	t.Run("Should not parse a transferDeploy events", func(t *testing.T) {

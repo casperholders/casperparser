@@ -342,7 +342,7 @@ func (d Result) MapUrefs() map[string]interface{} {
 
 // GetEvents retrieve deploy events
 func (d Result) GetEvents() string {
-	retrievedEvents := make(map[string]map[string]string)
+	var retrievedEvents []map[string]string
 	var transforms *gabs.Container
 	if d.ExecutionResults[0].Result.Success != nil {
 		transforms = gabs.Wrap(d.ExecutionResults[0].Result.Success.Effect)
@@ -380,7 +380,7 @@ func (d Result) GetEvents() string {
 				}
 			}
 			if isEvent {
-				retrievedEvents[tempMap["event_type"]] = tempMap
+				retrievedEvents = append(retrievedEvents, tempMap)
 			}
 		}
 	}

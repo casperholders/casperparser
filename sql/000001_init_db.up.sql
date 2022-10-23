@@ -132,6 +132,12 @@ ALTER TABLE "deploys"
 ALTER TABLE "contracts"
     ADD FOREIGN KEY ("package") REFERENCES "contract_packages" ("hash");
 
+ALTER TABLE "contracts"
+    ADD FOREIGN KEY ("deploy") REFERENCES "deploys" ("hash");
+
+ALTER TABLE "contract_packages"
+    ADD FOREIGN KEY ("deploy") REFERENCES "deploys" ("hash");
+
 CREATE INDEX ON "deploys" ("block");
 CREATE INDEX ON "deploys" ("from");
 CREATE INDEX ON "deploys" ("contract_hash");
@@ -194,6 +200,11 @@ SELECT *
 from purses
          FULL JOIN accounts ON purses.purse = accounts.main_purse
 ORDER BY balance desc;
+
+CREATE VIEW contracts_list AS
+SELECT contracts.hash as hash, package, contracts.type as type, score, d.timestamp
+from contracts
+         INNER JOIN deploys d on contracts.deploy = d.hash;
 
 CREATE FUNCTION era_rewards(eraid integer) RETURNS NUMERIC AS
 $$
@@ -311,6 +322,7 @@ grant select on public.total_rewards to web_anon;
 grant select on public.stakers to web_anon;
 grant select on public.mouvements to web_anon;
 grant select on public.rich_list to web_anon;
+grant select on public.contracts_list to web_anon;
 grant execute on function era_rewards(integer) to web_anon;
 grant execute on function total_validator_rewards(VARCHAR(68)) to web_anon;
 grant execute on function total_account_rewards(VARCHAR(68)) to web_anon;

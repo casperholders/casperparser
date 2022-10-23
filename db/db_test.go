@@ -91,13 +91,13 @@ func TestDB(t *testing.T) {
 		}
 	})
 	t.Run("Should Insert Contract package", func(t *testing.T) {
-		err = db.InsertContractPackage(context.Background(), "packageHash", "deploy", "from", "{}")
+		err = db.InsertContractPackage(context.Background(), "packageHash", "00a7445d3be6c6b89308daf62bd055e01d3e96f1a2f6e3efe586dfb915e3dfe2", "from", "{}")
 		if err != nil {
 			t.Errorf("Unable to Insert Contract Package : %s", err)
 		}
 	})
 	t.Run("Should Insert Contract", func(t *testing.T) {
-		err = db.InsertContract(context.Background(), "hash", "packageHash", "deploy", "from", "contractType", 1.0, "{}")
+		err = db.InsertContract(context.Background(), "hash", "packageHash", "00a7445d3be6c6b89308daf62bd055e01d3e96f1a2f6e3efe586dfb915e3dfe2", "from", "contractType", 1.0, "{}")
 		if err != nil {
 			t.Errorf("Unable to InsertContract : %s", err)
 		}

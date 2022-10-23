@@ -31,7 +31,23 @@ func TestHandleContractPackageRawTask(t *testing.T) {
 	WorkerAsyncClient = asynq.NewClient(redisConf)
 	defer WorkerAsyncClient.Close()
 	defer WorkerPool.Close()
-	task, err := NewContractPackageRawTask("3cb7d7849ebbd75b08d1883cc2642f846317fc5d86d5327c1102aff4ed9e1482", "03eb82b2e02c5880cd03fcc75580505571c69d476ce28d6cdbb0ee1930cf5950", "01ff85d8d335d2e5e1a8ba3554b447e2a61853971fc2a5bf9f1302557ef5eb2d4f")
+	task, err := NewBlockRawTask(981072)
+	if err != nil {
+		t.Errorf("Unable to create a NewBlockRawTask : %s", err)
+	}
+	err = HandleBlockRawTask(context.Background(), task)
+	if err != nil {
+		t.Errorf("Unable to run HandleBlockRawTask : %s", err)
+	}
+	task, err = NewDeployRawTask("03eb82b2e02c5880cd03fcc75580505571c69d476ce28d6cdbb0ee1930cf5950")
+	if err != nil {
+		t.Errorf("Unable to create a NewBlockRawTask : %s", err)
+	}
+	err = HandleDeployRawTask(context.Background(), task)
+	if err != nil {
+		t.Errorf("Unable to run HandleBlockRawTask : %s", err)
+	}
+	task, err = NewContractPackageRawTask("3cb7d7849ebbd75b08d1883cc2642f846317fc5d86d5327c1102aff4ed9e1482", "03eb82b2e02c5880cd03fcc75580505571c69d476ce28d6cdbb0ee1930cf5950", "01ff85d8d335d2e5e1a8ba3554b447e2a61853971fc2a5bf9f1302557ef5eb2d4f")
 	if err != nil {
 		t.Errorf("Unable to create a NewContractPackageRawTask : %s", err)
 	}

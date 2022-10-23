@@ -1,0 +1,32 @@
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: postgrest-tls
+spec:
+  entryPoints:
+    - secure
+  routes:
+    - match: Host(`data.casperholders.com`)
+      kind: Rule
+      services:
+        - name: postgrest-service
+          port: 80
+  tls:
+    secretName: postgrest-cert
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: postgrest-http
+spec:
+  entryPoints:
+    - web
+  routes:
+    - match: Host(`data.casperholders.com`)
+      middlewares:
+        - name: https-only
+      kind: Rule
+      services:
+        - name: postgrest-service
+          port: 80

@@ -1,0 +1,201 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: casperparser
+  name: casperparser
+spec:
+  replicas: 5
+  selector:
+    matchLabels:
+      app: casperparser
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: casperparser
+        name: casperparser
+    spec:
+      containers:
+        - name: casperparser
+          image: killianh/casperparser:mainnet
+          imagePullPolicy: Always
+          args: [ "worker" ]
+          resources: { }
+          volumeMounts:
+            - name: config-volume
+              mountPath: /root/.casperParser.yaml
+              subPath: .casperParser.yaml
+          envFrom:
+            - configMapRef:
+                name: casperparser-config
+      volumes:
+        - name: config-volume
+          configMap:
+            name: parser-config
+      restartPolicy: Always
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: casperparser-client
+  name: casperparser-client
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: casperparser-client
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: casperparser-client
+        name: casperparser-client
+    spec:
+      containers:
+        - name: casperparser-client
+          image: killianh/casperparser:mainnet
+          imagePullPolicy: Always
+          args: [ "client" ]
+          resources: { }
+          volumeMounts:
+            - name: config-volume
+              mountPath: /root/.casperParser.yaml
+              subPath: .casperParser.yaml
+          envFrom:
+            - configMapRef:
+                name: casperparser-config
+      volumes:
+        - name: config-volume
+          configMap:
+            name: parser-config
+      restartPolicy: Always
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: postgrest
+  name: postgrest
+spec:
+  selector:
+    matchLabels:
+      app: postgrest
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: postgrest
+        name: postgrest
+    spec:
+      containers:
+        - name: postgrest
+          image: postgrest/postgrest:v8.0.0.20211102
+          ports:
+            - containerPort: 3000
+          imagePullPolicy: Always
+          resources: { }
+          envFrom:
+            - configMapRef:
+                name: postgrest-config
+      restartPolicy: Always
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: casperparser-db
+  name: casperparser-db
+spec:
+  selector:
+    matchLabels:
+      app: casperparser-db
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: casperparser-db
+        name: casperparser-db
+    spec:
+      containers:
+        - name: casperparser-db
+          image: postgres:latest
+          ports:
+            - containerPort: 5432
+          env:
+            - name: POSTGRES_HOST_AUTH_METHOD
+              value: "trust"
+            - name: POSTGRES_DB
+              value: "casperparser"
+          volumeMounts:
+            - name: max-conns
+              mountPath: /docker-entrypoint-initdb.d
+            - name: casperparser-pg-volume
+              mountPath: /var/lib/postgresql/data
+      volumes:
+        - name: max-conns
+          configMap:
+            name: max-conns
+        - name: casperparser-pg-volume
+          persistentVolumeClaim:
+            claimName: casperparser-pg-volume
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: casperparser-redis
+  name: casperparser-redis
+spec:
+  selector:
+    matchLabels:
+      app: casperparser-redis
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: casperparser-redis
+        name: casperparser-redis
+    spec:
+      containers:
+        - name: casperparser-redis
+          image: redis:latest
+          ports:
+            - containerPort: 6379
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: asynqmon
+  name: asynqmon
+spec:
+  selector:
+    matchLabels:
+      app: asynqmon
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: asynqmon
+        name: asynqmon
+    spec:
+      containers:
+        - name: asynqmon
+          image: hibiken/asynqmon
+          env:
+            - name: REDIS_ADDR
+              value: "casperparser-redis-service:6379"
+            - name: ENABLE_METRICS_EXPORTER
+              value: "true"
+            - name: PROMETHEUS_ADDR
+              value: "http://prometheus-stack-kube-prom-prometheus.monitoring:9090"
+          ports:
+            - containerPort: 8080

@@ -290,7 +290,7 @@ UNION
 SELECT DISTINCT metadata -> 'recipient' ->> 'Account' as account
 FROM deploys
 WHERE contract_hash = contracthash
-  and metadata -> 'recipient' ->> 'Account' is not null
+  and metadata -> 'recipient' ->> 'Account' != ''
   and result is true
 UNION
 SELECT DISTINCT metadata ->> 'recipient' as account

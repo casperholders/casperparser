@@ -148,8 +148,7 @@ kind: CronJob
 metadata:
   name: reparse-account-purses
 spec:
-  schedule: "* * 31 2 *"
-  suspend: true
+  schedule: "0 * * * *"
   jobTemplate:
     spec:
       template:

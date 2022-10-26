@@ -196,10 +196,11 @@ WHERE timestamp >= NOW() - INTERVAL '14 DAY'
 GROUP BY day;
 
 CREATE VIEW rich_list AS
-SELECT *
+SELECT bids.public_key, account_hash, coalesce(purse, bids.bonding_purse) as purse, (balance + COALESCE(bids.staked_amount, 0)) as total
 from purses
          FULL JOIN accounts ON purses.purse = accounts.main_purse
-ORDER BY balance desc;
+         FULL JOIN bids ON accounts.public_key = bids.public_key
+ORDER BY total desc;
 
 CREATE VIEW contracts_list AS
 SELECT contracts.hash as hash, package, contracts.type as type, score, d.timestamp

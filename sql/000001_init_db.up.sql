@@ -161,6 +161,12 @@ CREATE VIEW total_rewards AS
 SELECT sum(amount::NUMERIC) as total_rewards
 FROM rewards;
 
+CREATE VIEW total_staking AS
+SELECT delegators.public_key,
+       sum(delegators.staked_amount) AS sum
+FROM delegators
+GROUP BY delegators.public_key;
+
 CREATE VIEW stakers AS
 WITH publicKeys as (SELECT DISTINCT public_key
                     FROM delegators)
@@ -325,6 +331,7 @@ grant select on public.purses to web_anon;
 grant select on public.full_stats to web_anon;
 grant select on public.simple_stats to web_anon;
 grant select on public.total_rewards to web_anon;
+grant select on public.total_staking to web_anon;
 grant select on public.stakers to web_anon;
 grant select on public.mouvements to web_anon;
 grant select on public.rich_list to web_anon;

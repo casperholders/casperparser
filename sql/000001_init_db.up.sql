@@ -213,6 +213,12 @@ from purses
          FULL JOIN total_staking on accounts.public_key = total_staking.public_key
 ORDER BY total desc;
 
+CREATE VIEW allowance AS
+SELECT DISTINCT metadata -> 'spender' -> 'Hash' as spender, "from", contract_hash
+FROM deploys
+where metadata_type = 'approve'
+  and result = true;
+
 CREATE VIEW contracts_list AS
 SELECT contracts.hash as hash, package, contracts.type as type, score, d.timestamp
 from contracts
@@ -336,6 +342,7 @@ grant select on public.stakers to web_anon;
 grant select on public.mouvements to web_anon;
 grant select on public.rich_list to web_anon;
 grant select on public.contracts_list to web_anon;
+grant select on public.allowance to web_anon;
 grant execute on function era_rewards(integer) to web_anon;
 grant execute on function total_validator_rewards(VARCHAR(68)) to web_anon;
 grant execute on function total_account_rewards(VARCHAR(68)) to web_anon;

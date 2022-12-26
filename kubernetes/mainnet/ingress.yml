@@ -1,5 +1,12 @@
 ---
 apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: gzip-compress
+spec:
+  compress: {}
+---
+apiVersion: traefik.containo.us/v1alpha1
 kind: IngressRoute
 metadata:
   name: postgrest-tls
@@ -8,6 +15,8 @@ spec:
     - secure
   routes:
     - match: Host(`data.casperholders.com`)
+      middlewares:
+        - name: gzip-compress
       kind: Rule
       services:
         - name: postgrest-service

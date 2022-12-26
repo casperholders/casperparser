@@ -9,5 +9,6 @@ resources:
   - ingress.yml
   - certificate.yml
   - monitor.yml
+  - cron.yml
 
 namespace: casperparser

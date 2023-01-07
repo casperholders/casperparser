@@ -217,7 +217,14 @@ CREATE VIEW allowance AS
 SELECT DISTINCT metadata -> 'spender' -> 'Hash' as spender, "from", contract_hash
 FROM deploys
 where metadata_type = 'approve'
-  and result = true;
+  and result = true
+  and metadata -> 'spender' -> 'Hash' is not null
+UNION
+SELECT DISTINCT metadata -> 'spender' -> 'Account' as spender, "from", contract_hash
+FROM deploys
+where metadata_type = 'approve'
+  and result = true
+  and metadata -> 'spender' -> 'Account' is not null;
 
 CREATE VIEW contracts_list AS
 SELECT contracts.hash as hash, package, contracts.type as type, score, d.timestamp

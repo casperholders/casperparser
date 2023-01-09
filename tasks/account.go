@@ -100,7 +100,7 @@ func HandleAccountTask(ctx context.Context, t *asynq.Task) error {
 	purse, err := WorkerRpcClient.GetMainPurse("account-hash-" + accountHash)
 	if err != nil {
 		if strings.Contains(err.Error(), "ValueNotFound(\"Failed to find base key at path") {
-			return fmt.Errorf("failed to retrieve account : %v: %w", err, asynq.SkipRetry)
+			return nil
 		}
 		return err
 	}

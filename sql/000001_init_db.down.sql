@@ -17,6 +17,7 @@ DROP VIEW IF EXISTS "total_rewards" cascade;
 DROP VIEW IF EXISTS "stakers" cascade;
 DROP VIEW IF EXISTS "mouvements" cascade;
 DROP VIEW IF EXISTS "rich_list" cascade;
+DROP VIEW IF EXISTS "allowance" cascade;
 DROP VIEW IF EXISTS "contracts_list" cascade;
 DROP FUNCTION IF EXISTS "era_rewards" cascade;
 DROP FUNCTION IF EXISTS "total_validator_rewards" cascade;

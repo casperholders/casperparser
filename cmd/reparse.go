@@ -34,7 +34,6 @@ systemPackageContracts: add system Packages Contracts. You must add the network 
 	Args:      cobra.MatchAll(cobra.MinimumNArgs(1), cobra.OnlyValidArgs),
 	Run: func(cmd *cobra.Command, args []string) {
 		arg := args[0]
-		network := args[1]
 		if arg == "all" {
 			reparseAll(getRedisConf(cmd))
 			return
@@ -43,7 +42,10 @@ systemPackageContracts: add system Packages Contracts. You must add the network 
 			reparseEraBlocks(getRedisConf(cmd))
 		}
 		if arg == "systemPackageContracts" {
-			reparseSystemPackageContracts(getRedisConf(cmd), network)
+			if len(args) > 1 {
+				network := args[1]
+				reparseSystemPackageContracts(getRedisConf(cmd), network)
+			}
 		}
 		if arg == "deploys" {
 			reparseDeploys(getRedisConf(cmd))

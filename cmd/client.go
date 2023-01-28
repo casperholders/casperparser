@@ -55,7 +55,7 @@ var clientCmd = &cobra.Command{
 
 // init the command flags
 func init() {
-	rootCmd.AddCommand(clientCmd)
+	RootCmd.AddCommand(clientCmd)
 	clientCmd.Flags().IntVarP(&pool, "pool", "p", 10, "Database connection pool max connections")
 	clientCmd.Flags().StringVarP(&event, "event", "e", "http://127.0.0.1:9999/events/main", "Node main event endpoint")
 	clientCmd.Flags().BoolVar(&disableCheckMissingBlocks, "disableCheckMissingBlocks", false, "Disable check on missing blocks")

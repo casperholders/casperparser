@@ -27,7 +27,7 @@ var verifyCmd = &cobra.Command{
 
 // init the command flags
 func init() {
-	rootCmd.AddCommand(verifyCmd)
+	RootCmd.AddCommand(verifyCmd)
 	verifyCmd.Flags().IntVarP(&verifyPool, "pool", "p", 10, "Database connection pool max connections")
 }
 

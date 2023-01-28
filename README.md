@@ -34,6 +34,18 @@ Docker local instance example :
 docker run --name some-postgres -p 127.0.0.1:5432:5432 -e POSTGRES_PASSWORD=mysecretpassword -e POSTGRES_DB=casperparser -d postgres
 ```
 
+## Usage documentation
+
+See [Documentation](casperParser.md)
+
+You need a **single** client to push the existing blocks and listen to the blockchain for new blocks.
+
+You need **at least** a worker to process the events pushed by the client.
+
+The software is highly scalable, if you have enough resources spawn more workers to process the events quicker.
+
+Tested on a kubernetes cluster with a single postgres instance and single redis instance the CasperParser can parse the full testnet under an hour (8m+ events) with 35 workers. 
+
 ## Optional add-on
 
 The software will directly apply the migration but if you want you can use the migrate cli to apply the migration to the database :
@@ -154,6 +166,11 @@ godoc -http=:6060
 ```
 
 You can now access the documentation at http://localhost:6060/
+
+You can also auto generate the documentation for the commands of the cli with :
+```bash
+go run doc.go
+```
 
 ## Api endpoints
 

@@ -68,7 +68,7 @@ systemPackageContracts: add system Packages Contracts. You must add the network 
 
 // init the command flags
 func init() {
-	rootCmd.AddCommand(reparseCmd)
+	RootCmd.AddCommand(reparseCmd)
 	reparseCmd.Flags().IntVarP(&reparsePool, "pool", "p", 10, "Database connection pool max connections")
 }
 

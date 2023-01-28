@@ -33,8 +33,8 @@ var master string
 var rpcEndpoint string
 var databaseConnectionString string
 
-// rootCmd represents the base command when called without any subcommands
-var rootCmd = &cobra.Command{
+// RootCmd represents the base command when called without any subcommands
+var RootCmd = &cobra.Command{
 	Use:   "casperParser",
 	Short: "casperParser help you parse and store off-chain data from the Casper Blockchain",
 	Long:  ``,
@@ -44,9 +44,9 @@ var rootCmd = &cobra.Command{
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
-// This is called by main.main(). It only needs to happen once to the rootCmd.
+// This is called by main.main(). It only needs to happen once to the RootCmd.
 func Execute() {
-	err := rootCmd.Execute()
+	err := RootCmd.Execute()
 	if err != nil {
 		os.Exit(1)
 	}
@@ -54,13 +54,13 @@ func Execute() {
 
 // init define all persistent flags
 func init() {
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.casperParser or ./casperParser )")
-	rootCmd.PersistentFlags().StringVarP(&redis, "redis", "r", "127.0.0.1:6379", "Redis single instance address. Lowest priority over cluster & sentinel flag.")
-	rootCmd.PersistentFlags().StringSliceVarP(&cluster, "cluster", "c", []string{}, "Redis cluster instance addresses. Priority over redis flag but not the sentinel flag.")
-	rootCmd.PersistentFlags().StringSliceVarP(&sentinel, "sentinel", "s", []string{}, "Redis sentinel addresses. Highest priority over redis & cluster flag.")
-	rootCmd.PersistentFlags().StringVarP(&master, "master", "m", "mymaster", "Redis sentinel master name")
-	rootCmd.PersistentFlags().StringVar(&rpcEndpoint, "rpc", "http://127.0.0.1:7777/rpc", "Casper RPC endpoint")
-	rootCmd.PersistentFlags().StringVarP(&databaseConnectionString, "database", "d", "postgres://postgres:mypassword@localhost:5432/casper", "Postgres connection string. Prefer ENV variable to setup a secure connection")
+	RootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.casperParser or ./casperParser )")
+	RootCmd.PersistentFlags().StringVarP(&redis, "redis", "r", "127.0.0.1:6379", "Redis single instance address. Lowest priority over cluster & sentinel flag.")
+	RootCmd.PersistentFlags().StringSliceVarP(&cluster, "cluster", "c", []string{}, "Redis cluster instance addresses. Priority over redis flag but not the sentinel flag.")
+	RootCmd.PersistentFlags().StringSliceVarP(&sentinel, "sentinel", "s", []string{}, "Redis sentinel addresses. Highest priority over redis & cluster flag.")
+	RootCmd.PersistentFlags().StringVarP(&master, "master", "m", "mymaster", "Redis sentinel master name")
+	RootCmd.PersistentFlags().StringVar(&rpcEndpoint, "rpc", "http://127.0.0.1:7777/rpc", "Casper RPC endpoint")
+	RootCmd.PersistentFlags().StringVarP(&databaseConnectionString, "database", "d", "postgres://postgres:mypassword@localhost:5432/casper", "Postgres connection string. Prefer ENV variable to setup a secure connection")
 }
 
 // initializeConfig init Viper and bind flags to viper

@@ -30,7 +30,7 @@ spec:
 apiVersion: batch/v1
 kind: CronJob
 metadata:
-  name: reparse-systemPackageContracts
+  name: reparse-system-package-contracts
 spec:
   schedule: "* * 31 2 *"
   suspend: true

@@ -74,43 +74,35 @@ docker run --rm --net=host -p 3000:3000 \
 
 Here's the database Schema.
 
-Four tables, blocks & raw blocks (Contains all parsed blocks and raw blocks) and deploys & raw deploys (Contains all parsed deploys and raw deploys).  
-The block data structure contain :
-
-- The hash of the block
-- The era
-- The timestamp
-- The height
-- A boolean era_end to indicate if the block is a switch block
-- A boolean validated to indicate if all deploys contained inside the block are correctly inserted into the database.
-
-The raw block data structure contain :
-- The hash of the block
-- The raw json rpc response
-
-The deploy data structure contain :
-
-- The hash of the deploy
-- The address from which the deploy is initiated (from)
-- The cost in motes
-- The result of the deploy as a boolean (true = success / false = failed)
-- The timestamp
-- The block hash of the deploy
-- The type of the deploy (transfer or session type)
-- The metadata_type an approximation about the deploy content
-- The metadata contains a json with the args values parsed into a string
-- The events contain all the events of the deploys if any
-
-A deploy is linked to a block through a block hash and the 'from' column is indexed to speed up querying by addresses.
-
-The raw deploy data structure contain :
-- The hash of the deploy
-- The raw json rpc response
-
-There's an additional view included within the database : full_stats. This view expose the last 14 days stats about
-deploys types.
-
 ![Database Schema](diagram.png "Database Schema")
+
+### Tables
+
+- Accounts : Hold the public key / account-hash & main purse of all accounts
+- Bids : Hold the bids of all validators
+- Delegators : Hold all delegators
+- Blocks : Hold all the blocks, a block is tied to a raw block
+- Raw blocks : Hash of the block and the data retrieve from the RPC
+- Deploys : Hold all deploys, tied to a raw deploy and a block
+- Raw deploys : Hash of the deploy and the data retrieve from the RPC
+- Rewards : Rewards of an era, tied to a block
+- Contract packages : Hold all contract packages, tied to a deploy (null for system contracts)
+- Contracts : Hold all contracts, tied to a deploy and a package
+- Contract Named Keys : Tied to a contract and a named keys
+- Named keys : Hold all named keys with their initial value or updated if reparsed since the first parse
+- Purses : Hold all purses and their balances
+
+### Views
+
+- Mouvements : stats for different types of CSPR mouvements (transfer/staking)
+- Full stats : stats for the different types of deploys
+- Allowance : All allowance for erc20 token holders
+- Simple stats : Number of deploys per day
+- Total staking : Staking balance per public key
+- Total rewards : Rewards per public key
+- Stakers : Number of stakers
+- Rich list : List of the richest accounts
+- Contract list : simplified list of contracts
 
 # How to build
 
@@ -182,14 +174,13 @@ cluster: ["REDIS_INSTANCE_URL1", "REDIS_INSTANCE_URL2"] (Will override the redis
 sentinel:  ["REDIS_SENTINEL_URL1", "REDIS_SENTINEL_URL2"] (Will override the redis and cluster key and use the sentinel key instead for a HA/Failover Redis) 
 master: "master_redis_sentinel_name" (Required when the sentinel key is used, default value : mymaster)
 concurrency: 100 //Number of concurrent workers that will be spwaned with the worker command
-deploysTypes:
-  storedContracts:
-    [category]: (Just needed to seperate deploy that have identical entrypoints)
-        [entrypoint]:
-            deployName: "metadata_type" (Will be used as the metadata_type in the db)
-            hasName: [true/false] (Has a name or not)
-            contractName: "name" (Required if hasName is true)
-            args: ["arg1", "arg2"] (Array of string containing the args name to find)
+config:
+  contractTypes:
+    erc20: # Name of the contract type
+      entrypoints:
+        - name: "entrypoint_name" # Entrypoint name
+          args: [ "arg1", "arg2", "arg3" ] # Args of the entrypoint
+      namedkeys: [ "nameKey1", "nameKey2", "nameKey3" ] #Named keys of the contract
   moduleBytes:
     [deployName]: (Will be used as the metadata_type in the db)
         strictArgs: [true/false - Will check the exact number of args]

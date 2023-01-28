@@ -28,34 +28,38 @@ era: only reparse switch blocks
 deploys: only reparse deploys, will ignore any other deploy args
 moduleBytes: only reparse moduleBytes deploys
 exceptTransfers: only reparse deploys except transfers deploys
+systemPackageContracts: add system Packages Contracts. You must add the network type right after. Ex : reparse systemPackageContracts testnet
 `,
-	ValidArgs: []string{"all", "era", "deploys", "moduleBytes", "exceptTransfers", "accountPurses"},
+	ValidArgs: []string{"all", "era", "deploys", "moduleBytes", "exceptTransfers", "accountPurses", "systemPackageContracts", "testnet", "mainnet"},
 	Args:      cobra.MatchAll(cobra.MinimumNArgs(1), cobra.OnlyValidArgs),
 	Run: func(cmd *cobra.Command, args []string) {
-		for _, arg := range args {
-			if arg == "all" {
-				reparseAll(getRedisConf(cmd))
-				return
-			}
-			if arg == "era" {
-				reparseEraBlocks(getRedisConf(cmd))
-			}
-			if arg == "deploys" {
-				reparseDeploys(getRedisConf(cmd))
-				return
-			}
-			if arg == "moduleBytes" {
-				reparseModuleBytes(getRedisConf(cmd))
-			}
-			if arg == "exceptTransfers" {
-				reparseExceptTransfers(getRedisConf(cmd))
-			}
-			if arg == "accountPurses" {
-				startAccountPurses(getRedisConf(cmd))
-				startAccountHashPurses(getRedisConf(cmd))
-				startUrefPurses(getRedisConf(cmd))
-				startPurses(getRedisConf(cmd))
-			}
+		arg := args[0]
+		network := args[1]
+		if arg == "all" {
+			reparseAll(getRedisConf(cmd))
+			return
+		}
+		if arg == "era" {
+			reparseEraBlocks(getRedisConf(cmd))
+		}
+		if arg == "systemPackageContracts" {
+			reparseSystemPackageContracts(getRedisConf(cmd), network)
+		}
+		if arg == "deploys" {
+			reparseDeploys(getRedisConf(cmd))
+			return
+		}
+		if arg == "moduleBytes" {
+			reparseModuleBytes(getRedisConf(cmd))
+		}
+		if arg == "exceptTransfers" {
+			reparseExceptTransfers(getRedisConf(cmd))
+		}
+		if arg == "accountPurses" {
+			startAccountPurses(getRedisConf(cmd))
+			startAccountHashPurses(getRedisConf(cmd))
+			startUrefPurses(getRedisConf(cmd))
+			startPurses(getRedisConf(cmd))
 		}
 	},
 }
@@ -89,6 +93,23 @@ func reparseModuleBytes(redis asynq.RedisConnOpt) {
 func reparseExceptTransfers(redis asynq.RedisConnOpt) {
 	const sql = `SELECT hash FROM deploys WHERE type != 'transfer';`
 	startReparseDeploys(redis, sql)
+}
+
+// reparseSystemPackageContracts reparse System Package Contracts
+func reparseSystemPackageContracts(redis asynq.RedisConnOpt, network string) {
+	if network == "testnet" {
+		reparseClient = asynq.NewClient(redis)
+		defer reparseClient.Close()
+		//Handle payment testnet contract
+		task, err := tasks.NewContractPackageRawTask("624dbe2395b9d9503fbee82162f1714ebff6b639f96d2084d26d944c354ec4c5", "", "")
+		if err != nil {
+			log.Fatalf("could not create task: %v", err)
+		}
+		_, err = reparseClient.Enqueue(task, asynq.Queue("contracts"))
+		if err != nil {
+			log.Fatalf("could not enqueue task: %v", err)
+		}
+	}
 }
 
 // startReparseBlocks reparse blocks for a given sql query

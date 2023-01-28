@@ -30,6 +30,35 @@ spec:
 apiVersion: batch/v1
 kind: CronJob
 metadata:
+  name: reparse-systemPackageContracts
+spec:
+  schedule: "* * 31 2 *"
+  suspend: true
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+            - name: reparse
+              image: killianh/casperparser
+              imagePullPolicy: Always
+              args: [ "reparse", "systemPackageContracts", "testnet" ]
+              volumeMounts:
+                - name: config-volume
+                  mountPath: /root/.casperParser.yaml
+                  subPath: .casperParser.yaml
+              envFrom:
+                - configMapRef:
+                    name: casperparser-config-testnet
+          volumes:
+            - name: config-volume
+              configMap:
+                name: parser-config
+          restartPolicy: Never
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
   name: reparse-era
 spec:
   schedule: "* * 31 2 *"

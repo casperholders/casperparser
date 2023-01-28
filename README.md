@@ -169,7 +169,7 @@ You can now access the documentation at http://localhost:6060/
 
 You can also auto generate the documentation for the commands of the cli with :
 ```bash
-go run doc.go
+go run doc/doc.go
 ```
 
 ## Api endpoints

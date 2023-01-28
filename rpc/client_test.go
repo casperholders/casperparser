@@ -1,7 +1,6 @@
 package rpc
 
 import (
-	"log"
 	"math"
 	"testing"
 )
@@ -49,8 +48,7 @@ func TestClient_GetContractPackageHash(t *testing.T) {
 }
 
 func TestClient_GetContract(t *testing.T) {
-	r, err := rpcClient.GetContract("db3a41adea55e5ae65c8cba29d8e8527a16ac5fa998a76dfed553215e3254090")
-	log.Println(r)
+	_, err := rpcClient.GetContract("db3a41adea55e5ae65c8cba29d8e8527a16ac5fa998a76dfed553215e3254090")
 	if err != nil {
 		t.Errorf("Unable to retrieve contract package %s", err)
 	}
@@ -96,6 +94,14 @@ func TestClient_GetUrefValue(t *testing.T) {
 	_, _, err := rpcClient.GetUrefValue("uref-bb9f47c30ddbe192438fad10b7db8200247529d6592af7159d92c5f3aa7716a1-007")
 	if err != nil {
 		t.Errorf("Unable to retrieve uref %s", err)
+	}
+	_, _, err = rpcClient.GetUrefValue("hash-d204aaea638a26d580fc0b40af97c468469f3c11c7aa60f2866adc46f03b5033")
+	if err != nil {
+		t.Errorf("Unable to retrieve uref %s", err)
+	}
+	initValue, _, err := rpcClient.GetUrefValue("hash-0000000000000000000000000000000000000000000000000000000000000000")
+	if err == nil || initValue != "null" {
+		t.Errorf("Init value should be null. Received : %s", initValue)
 	}
 	_, _, err = rpcClient.GetUrefValue("uref-d4a9e949503f14a524ee5a163386aec4ff231b87e4e856f68d8840432ecd693e-007")
 	if err != nil {

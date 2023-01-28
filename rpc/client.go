@@ -263,17 +263,17 @@ func (c *Client) GetEraInfo(hash string) (reward.Result, error) {
 func (c *Client) GetUrefValue(hash string) (string, bool, error) {
 	srh, err := c.GetStateRootHash(true)
 	if err != nil {
-		return "", false, fmt.Errorf("failed to get result: %w", err)
+		return "null", false, fmt.Errorf("failed to get result: %w", err)
 	}
 
 	resp, err := c.RpcCall("state_get_item", []string{srh, hash})
 	if err != nil {
-		return "", false, err
+		return "null", false, err
 	}
 	var parsedUref uref
 	err = json.Unmarshal(resp.Result, &parsedUref)
 	if err != nil {
-		return "", false, err
+		return "null", false, err
 	}
 	if parsedUref.StoredValue.CLValue.Parsed == nil {
 		balance, errB := c.GetPurseBalance(hash)
@@ -283,7 +283,7 @@ func (c *Client) GetUrefValue(hash string) (string, bool, error) {
 	}
 	b, err := json.Marshal(parsedUref.StoredValue.CLValue.Parsed)
 	if err != nil {
-		return "", false, err
+		return "null", false, err
 	}
 	return string(b), false, nil
 }

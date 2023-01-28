@@ -177,6 +177,11 @@ func (db *DB) InsertRawDeploy(ctx context.Context, hash string, json string) err
 // InsertContractPackage in the database
 func (db *DB) InsertContractPackage(ctx context.Context, hash string, deploy string, from string, data string) error {
 	hash = strings.ToLower(hash)
+	var deployValue *string
+	deployValue = nil
+	if deploy != "" {
+		deployValue = &deploy
+	}
 	const sql = `INSERT INTO contract_packages ("hash", "deploy", "from", "data")
 	VALUES ($1, $2, $3, $4)
 	ON CONFLICT (hash)
@@ -184,7 +189,7 @@ func (db *DB) InsertContractPackage(ctx context.Context, hash string, deploy str
 	SET deploy = $2,
 	"from" = $3,
 	data = $4;`
-	_, err := db.Postgres.Exec(ctx, sql, hash, deploy, from, data)
+	_, err := db.Postgres.Exec(ctx, sql, hash, deployValue, from, data)
 	return db.checkErr(err)
 }
 

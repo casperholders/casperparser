@@ -203,9 +203,6 @@ func (db *DB) InsertContract(ctx context.Context, hash string, packageHash strin
 	score = $6,
 	data = $7;`
 	_, err := db.Postgres.Exec(ctx, sql, hash, packageHash, deploy, from, contractType, score, data)
-	if err != nil {
-		log.Printf(data)
-	}
 	return db.checkErr(err)
 }
 
@@ -221,14 +218,10 @@ func (db *DB) InsertNamedKey(ctx context.Context, uref string, name string, isPu
 	initial_value = $4;`
 	_, err := db.Postgres.Exec(ctx, sql, uref, name, isPurse, initialValue)
 	if err != nil {
-		log.Printf("Uref: %s Name: %s Initial Value: %s \n", uref, name, initialValue)
 		return db.checkErr(err)
 	}
 	const joinsql = `INSERT INTO contracts_named_keys (contract_hash, named_key_uref) VALUES ($1, $2) ON CONFLICT DO NOTHING;`
 	_, err = db.Postgres.Exec(ctx, joinsql, contractHash, uref)
-	if err != nil {
-		log.Printf("Uref: %s Name: %s Initial Value: %s \n", uref, name, initialValue)
-	}
 	return db.checkErr(err)
 }
 

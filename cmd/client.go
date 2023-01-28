@@ -124,7 +124,7 @@ func getLastBlockInDatabase() int {
 
 func listenEvents() {
 	defer wg.Done()
-	clientSSE := sse.NewClient(event, sse.ClientMaxBufferSize(1<<25))
+	clientSSE := sse.NewClient(event, sse.ClientMaxBufferSize(1<<26))
 
 	err := clientSSE.Subscribe("", func(msg *sse.Event) {
 		var transforms *gabs.Container

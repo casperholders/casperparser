@@ -1,8 +1,7 @@
 # CasperParser - A parser for the Casper Blockchain
 
 
-[![codecov](https://codecov.io/gh/casperholders/casperparser/branch/main/graph/badge.svg?token=FZMG84DN4H)](https://codecov.io/gh/casperholders/casperparser)
-[![Lines of Code](https://sonarcloud.io/api/project_badges/measure?project=casperholders_casperparser&metric=ncloc)](https://sonarcloud.io/summary/new_code?id=casperholders_casperparser)
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=casperholders_casperparser&metric=coverage)](https://sonarcloud.io/summary/new_code?id=casperholders_casperparser)[![Lines of Code](https://sonarcloud.io/api/project_badges/measure?project=casperholders_casperparser&metric=ncloc)](https://sonarcloud.io/summary/new_code?id=casperholders_casperparser)
 [![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=casperholders_casperparser&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=casperholders_casperparser)
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=casperholders_casperparser&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=casperholders_casperparser)
 [![Reliability Rating](https://sonarcloud.io/api/project_badges/measure?project=casperholders_casperparser&metric=reliability_rating)](https://sonarcloud.io/summary/new_code?id=casperholders_casperparser)

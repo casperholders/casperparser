@@ -339,6 +339,7 @@ WHERE contract_hash = contracthash
   and result is true;
 $$ LANGUAGE SQL;
 
+DROP ROLE IF EXISTS web_anon;
 CREATE ROLE web_anon NOLOGIN;
 
 grant usage on schema public to web_anon;

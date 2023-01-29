@@ -231,6 +231,20 @@ SELECT contracts.hash as hash, package, contracts.type as type, score, d.timesta
 from contracts
          INNER JOIN deploys d on contracts.deploy = d.hash;
 
+CREATE VIEW auctions_list AS
+SELECT contracts.hash as hash, package, contracts.type as type, score, d.timestamp
+from contracts
+         INNER JOIN deploys d on contracts.deploy = d.hash
+WHERE contracts.hash in
+      (SELECT contract_hash
+       from contracts_named_keys
+       where named_key_uref in
+             (SELECT uref
+              from named_keys
+              where name = 'marketplace_account'
+                and initial_value =
+                    '"30f1d1b21e3a2c36b55fef940210edf43866f59038e22b24f867afd83e089da1"'));
+
 CREATE FUNCTION era_rewards(eraid integer) RETURNS NUMERIC AS
 $$
 SELECT sum(amount::NUMERIC)
@@ -349,6 +363,7 @@ grant select on public.stakers to web_anon;
 grant select on public.mouvements to web_anon;
 grant select on public.rich_list to web_anon;
 grant select on public.contracts_list to web_anon;
+grant select on public.auctions_list to web_anon;
 grant select on public.allowance to web_anon;
 grant execute on function era_rewards(integer) to web_anon;
 grant execute on function total_validator_rewards(VARCHAR(68)) to web_anon;

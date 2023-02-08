@@ -16,8 +16,10 @@ binary:
 
 build: install_deps install_pkger pkger binary
 
-test:
+run_test:
 	go test ./... -race -covermode=atomic -coverprofile=coverage.out
+
+test: install_deps install_pkger pkger install_migrate migrate_db run_test
 
 codecov:
 	go test ./... -race -coverprofile=coverage.out -covermode=atomic -json > report.json

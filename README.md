@@ -180,6 +180,11 @@ No api endpoint are available with this software.
 You can configure the CLI by either the config file, env variables or flags. Or a combination of those three options.
 The CLI flags will override the env variables keys, and the env variables will override the config file keys.
 
+## Export your .env file to pass the values to the CLI
+```bash
+export $(grep -v '^#' .env | xargs)
+```
+
 ## Config File explanation
 
 ```

@@ -108,6 +108,36 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
+    app: postgrest-download-testnet
+  name: postgrest-download-testnet
+spec:
+  selector:
+    matchLabels:
+      app: postgrest-download-testnet
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: postgrest-download-testnet
+        name: postgrest-download-testnet
+    spec:
+      containers:
+        - name: postgrest-download-testnet
+          image: postgrest/postgrest:v8.0.0.20211102
+          ports:
+            - containerPort: 3000
+          imagePullPolicy: Always
+          resources: { }
+          envFrom:
+            - configMapRef:
+                name: postgrest-download-config-testnet
+      restartPolicy: Always
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
     app: casperparser-db-testnet
   name: casperparser-db-testnet
 spec:

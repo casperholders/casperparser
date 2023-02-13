@@ -20,6 +20,17 @@ data:
   PGRST_OPENAPI_SERVER_PROX_URI: "https://data.testnet.casperholders.com/swagger"
   PGRST_DB_MAX_ROWS: "100"
 ---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgrest-download-config-testnet
+data:
+  PGRST_DB_URI: "postgres://postgres@casperparser-db-service-testnet:5432/casperparser-testnet"
+  PGRST_DB_SCHEMA: "public"
+  PGRST_DB_ANON_ROLE: "web_anon"
+  PGRST_OPENAPI_MODE: "ignore-privileges"
+  PGRST_DB_MAX_ROWS: "5000"
+---
 kind: ConfigMap
 apiVersion: v1
 metadata:

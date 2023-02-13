@@ -108,6 +108,36 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
+    app: postgrest-download
+  name: postgrest-download
+spec:
+  selector:
+    matchLabels:
+      app: postgrest-download
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: postgrest-download
+        name: postgrest-download
+    spec:
+      containers:
+        - name: postgrest-download
+          image: postgrest/postgrest:v8.0.0.20211102
+          ports:
+            - containerPort: 3000
+          imagePullPolicy: Always
+          resources: { }
+          envFrom:
+            - configMapRef:
+                name: postgrest-download-config
+      restartPolicy: Always
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
     app: casperparser-db
   name: casperparser-db
 spec:

@@ -12,7 +12,7 @@ metadata:
   name: postgrest-tls-testnet
 spec:
   entryPoints:
-    - secure
+    - websecure
   routes:
     - match: Host(`data.testnet.casperholders.com`)
       middlewares:

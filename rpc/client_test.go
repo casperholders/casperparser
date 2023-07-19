@@ -5,10 +5,10 @@ import (
 	"testing"
 )
 
-var rpcClient = NewRpcClient("http://rpc.testnet.casperholders.com/rpc")
+var rpcClient = NewRpcClient("http://node.testnet.casperholders.com:7777/rpc")
 
 func TestClient_GetBlock(t *testing.T) {
-	_, _, err := rpcClient.GetBlock(1)
+	_, _, err := rpcClient.GetBlock(1894552)
 	if err != nil {
 		t.Errorf("Unable to retrieve block : %s", err)
 	}
@@ -26,7 +26,7 @@ func TestClient_GetLastBlockHeight(t *testing.T) {
 }
 
 func TestClient_GetDeploy(t *testing.T) {
-	_, _, err := rpcClient.GetDeploy("999eebd07739ca44945a102cbfa31e97a486979b83111e1af8ac050c73cc4872")
+	_, _, err := rpcClient.GetDeploy("dc9db1422a0c9b212b7dd052033c4ecd54d66423e286ee6790c3af36f2174250")
 	if err != nil {
 		t.Errorf("Unable to retrieve deploy %s", err)
 	}
@@ -59,7 +59,7 @@ func TestClient_GetContract(t *testing.T) {
 }
 
 func TestClient_GetEraInfo(t *testing.T) {
-	r, err := rpcClient.GetEraInfo("3293b31319a97a6451614f57bdd7f65225d4cb2add24fd78af373b4188413a10")
+	r, err := rpcClient.GetEraInfo("8d6a98a977482af4eb308cfb4ebdf6981643afdc06f56d6589792808992f56fe")
 	if err != nil {
 		t.Errorf("Unable to retrieve era info %s", err)
 	}

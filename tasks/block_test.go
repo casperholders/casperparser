@@ -41,7 +41,7 @@ func TestHandleBlockRawTask(t *testing.T) {
 	WorkerAsyncClient = asynq.NewClient(redisConf)
 	defer WorkerAsyncClient.Close()
 	defer WorkerPool.Close()
-	task, err := NewBlockRawTask(84)
+	task, err := NewBlockRawTask(1894586)
 	if err != nil {
 		t.Errorf("Unable to create a NewBlockRawTask : %s", err)
 	}
@@ -49,7 +49,7 @@ func TestHandleBlockRawTask(t *testing.T) {
 	if err != nil {
 		t.Errorf("Unable to run HandleBlockRawTask : %s", err)
 	}
-	task, err = NewBlockVerifyTask("d9dd87b06db708800036da57f1acf9302f51dde2a57b548ad4804ceb2377bdff")
+	task, err = NewBlockVerifyTask("21fd6475128c11e71b45d4c88fa7f251cfec18ac2a481f39b8f88c405b140754")
 	if err != nil {
 		t.Errorf("Unable to create a NewBlockRawTask : %s", err)
 	}
@@ -57,7 +57,7 @@ func TestHandleBlockRawTask(t *testing.T) {
 	if err != nil {
 		t.Errorf("Unable to run HandleBlockRawTask : %s", err)
 	}
-	task, err = NewBlockRawTask(1153698)
+	task, err = NewBlockRawTask(1894357)
 	if err != nil {
 		t.Errorf("Unable to create a NewBlockRawTask : %s", err)
 	}
@@ -65,7 +65,7 @@ func TestHandleBlockRawTask(t *testing.T) {
 	if err != nil {
 		t.Errorf("Unable to run HandleBlockRawTask : %s", err)
 	}
-	task, err = NewBlockVerifyTask("fc204a0bc7788604fd0ded0ac19a73b687d12a8d735ccf57f3c65ce58d6f4d1f")
+	task, err = NewBlockVerifyTask("8d6a98a977482af4eb308cfb4ebdf6981643afdc06f56d6589792808992f56fe")
 	if err != nil {
 		t.Errorf("Unable to create a NewBlockRawTask : %s", err)
 	}

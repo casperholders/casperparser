@@ -197,6 +197,7 @@ func (db *DB) InsertContractPackage(ctx context.Context, hash string, deploy str
 func (db *DB) InsertContract(ctx context.Context, hash string, packageHash string, deploy string, from string, contractType string, score float64, data string) error {
 	hash = strings.ToLower(hash)
 	packageHash = strings.ToLower(packageHash)
+	packageHash = strings.ReplaceAll(packageHash, "contract-package-", "")
 	const sql = `INSERT INTO contracts ("hash", "package", "deploy", "from", "type", "score", "data")
 	VALUES ($1, $2, $3, $4, $5, $6, $7)
 	ON CONFLICT (hash)

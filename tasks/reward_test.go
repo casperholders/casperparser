@@ -31,7 +31,7 @@ func TestHandleRewardTask(t *testing.T) {
 	WorkerAsyncClient = asynq.NewClient(redisConf)
 	defer WorkerAsyncClient.Close()
 	defer WorkerPool.Close()
-	task, err := NewRewardTask("fc204a0bc7788604fd0ded0ac19a73b687d12a8d735ccf57f3c65ce58d6f4d1f")
+	task, err := NewRewardTask("8d6a98a977482af4eb308cfb4ebdf6981643afdc06f56d6589792808992f56fe")
 	if err != nil {
 		t.Errorf("Unable to create a NewRewardTask : %s", err)
 	}

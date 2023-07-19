@@ -69,7 +69,7 @@ func (c *Client) RpcCall(method string, params interface{}) (Response, error) {
 	}
 
 	if rpcResponse.Error != nil {
-		return rpcResponse, fmt.Errorf("rpc call failed, code - %d, message - %s", rpcResponse.Error.Code, rpcResponse.Error.Message)
+		return rpcResponse, fmt.Errorf("rpc call failed, code - %d, message - %s, data - %s", rpcResponse.Error.Code, rpcResponse.Error.Message, rpcResponse.Error.Data)
 	}
 
 	return rpcResponse, nil
@@ -302,6 +302,7 @@ type Response struct {
 	Error   *struct {
 		Code    int    `json:"code"`
 		Message string `json:"message"`
+		Data    string `json:"data"`
 	} `json:"error,omitempty"`
 }
 

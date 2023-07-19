@@ -131,8 +131,16 @@ func listenEvents() {
 		transforms, _ = gabs.ParseJSON(msg.Data)
 		height, ok := transforms.S("BlockAdded", "block", "header", "height").Data().(float64)
 		if ok {
-			addBlockTask(int(height))
-			addAuctionTask()
+			if int(height) > getLastBlockInDatabase() {
+				addBlockTask(int(height))
+				addAuctionTask()
+			} else {
+				isHeightExist := 0
+				err := database.Postgres.QueryRow(context.Background(), `select height from blocks WHERE height = $1`, int(height)).Scan(&isHeightExist)
+				if err != nil || isHeightExist != int(height) {
+					addBlockTask(int(height))
+				}
+			}
 		}
 	})
 	if err != nil {

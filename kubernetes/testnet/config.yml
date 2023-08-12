@@ -4,9 +4,9 @@ metadata:
   name: casperparser-config-testnet
 data:
   CASPER_PARSER_REDIS: "casperparser-redis-service-testnet:6379"
-  CASPER_PARSER_RPC: "http://78.46.68.30:7777/rpc"
+  CASPER_PARSER_RPC: "http://188.40.132.200:7777/rpc"
   CASPER_PARSER_DATABASE: "postgres://postgres@casperparser-db-service-testnet:5432/casperparser-testnet?sslmode=disable"
-  CASPER_PARSER_EVENT: "http://78.46.68.30:9999/events/main"
+  CASPER_PARSER_EVENT: "http://188.40.132.200:9999/events/main"
 ---
 apiVersion: v1
 kind: ConfigMap

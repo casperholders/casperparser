@@ -10,7 +10,7 @@ import (
 	"testing"
 )
 
-var rpcClient = rpc.NewRpcClient("http://rpc.testnet.casperholders.com/rpc")
+var rpcClient = rpc.NewRpcClient("https://node.testnet.casperholders.com/rpc")
 
 func TestResult_GetContractType(t *testing.T) {
 	err := utils.InitViper()

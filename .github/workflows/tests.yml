@@ -41,7 +41,7 @@ jobs:
       - run: |
           cat <<EOF > .env
           CASPER_PARSER_REDIS=redis:6379
-          CASPER_PARSER_RPC=http://95.216.44.9:7777/rpc
+          CASPER_PARSER_RPC=http://node.testnet.casperholders.com:7777/rpc
           CASPER_PARSER_DATABASE=postgres://postgres:myPassword@postgres:5432/gotest?sslmode=disable
           CASPER_PARSER_EVENT=http://node.testnet.casperholders.com:9999/events/main
           EOF

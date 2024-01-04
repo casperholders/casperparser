@@ -292,7 +292,8 @@ func (db *DB) InsertRewards(ctx context.Context, rowsToInsert [][]interface{}) e
 	)
 	if err != nil || count < int64(len(rowsToInsert)) {
 		const sql = `DELETE FROM rewards WHERE block = $1;`
-		_, errD := db.Postgres.Query(ctx, sql, rowsToInsert[0][0])
+		rows, errD := db.Postgres.Query(ctx, sql, rowsToInsert[0][0])
+		defer rows.Close()
 		if db.checkErr(errD) != nil {
 			return db.checkErr(errD)
 		}

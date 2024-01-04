@@ -154,7 +154,7 @@ spec:
     spec:
       containers:
         - name: casperparser-db
-          image: postgres:latest
+          image: postgres:15
           ports:
             - containerPort: 5432
           env:

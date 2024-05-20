@@ -312,7 +312,7 @@ type blockParams struct {
 
 type blockIdentifier struct {
 	Hash   string `json:"Hash,omitempty"`
-	Height uint64 `json:"Height,omitempty"`
+	Height uint64 `json:"Height"`
 }
 
 type stateRootHash struct {

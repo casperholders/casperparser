@@ -21,7 +21,45 @@ spec:
         - name: casperparser
           image: killianh/casperparser:mainnet
           imagePullPolicy: Always
-          args: [ "worker" ]
+          args: [ "worker", "-q", "blocks,1,deploys,1,contracts,1,auction,1,accounts,1" ]
+          resources: { }
+          volumeMounts:
+            - name: config-volume
+              mountPath: /root/.casperParser.yaml
+              subPath: .casperParser.yaml
+          envFrom:
+            - configMapRef:
+                name: casperparser-config
+      volumes:
+        - name: config-volume
+          configMap:
+            name: parser-config
+      restartPolicy: Always
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: casperparser-era
+  name: casperparser-era
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: casperparser-era
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: casperparser-era
+        name: casperparser-era
+    spec:
+      containers:
+        - name: casperparser-era
+          image: killianh/casperparser:mainnet
+          imagePullPolicy: Always
+          args: [ "worker", "-k", "1", "-q", "era,1" ]
           resources: { }
           volumeMounts:
             - name: config-volume

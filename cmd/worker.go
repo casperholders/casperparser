@@ -46,7 +46,7 @@ casperParser worker --redis 127.0.0.1:6379 -- Will start the worker with a singl
 			}
 			for i := 0; i < len(queues); i += 2 {
 				var err error
-				if queues[i] != "blocks" && queues[i] != "deploys" && queues[i] != "contracts" && queues[i] != "era" && queues[i] != "auction" {
+				if queues[i] != "blocks" && queues[i] != "deploys" && queues[i] != "contracts" && queues[i] != "era" && queues[i] != "auction" && queues[i] != "accounts" {
 					log.Fatalf("Unknown queue %s. Supported queues : blocks, deploys, contracts, era, auction, accounts", queues[i])
 				}
 				queuesMap[queues[i]], err = strconv.Atoi(queues[i+1])

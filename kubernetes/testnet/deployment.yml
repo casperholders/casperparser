@@ -40,6 +40,44 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
+    app: casperparser-testnet-era
+  name: casperparser-testnet-era
+spec:
+  replicas: 5
+  selector:
+    matchLabels:
+      app: casperparser-testnet-era
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: casperparser-testnet-era
+        name: casperparser-testnet-era
+    spec:
+      containers:
+        - name: casperparser-testnet-era
+          image: killianh/casperparser
+          imagePullPolicy: Always
+          args: [ "worker", "-k", "10", "-q", "era,1" ]
+          resources: { }
+          volumeMounts:
+            - name: config-volume
+              mountPath: /root/.casperParser.yaml
+              subPath: .casperParser.yaml
+          envFrom:
+            - configMapRef:
+                name: casperparser-config-testnet
+      volumes:
+        - name: config-volume
+          configMap:
+            name: parser-config
+      restartPolicy: Always
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
     app: casperparser-client-testnet
   name: casperparser-client-testnet
 spec:

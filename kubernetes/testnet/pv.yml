@@ -2,14 +2,10 @@ apiVersion: v1
 kind: PersistentVolume
 metadata:
   name: casperparser-testnet-pg-volume
-  labels:
-    type: local
 spec:
   persistentVolumeReclaimPolicy: Delete
-  storageClassName: manual
+  storageClassName: longhorn
   capacity:
     storage: 200Gi
   accessModes:
     - ReadWriteMany
-  hostPath:
-    path: "/casperparser-testnet-pg-volume/"

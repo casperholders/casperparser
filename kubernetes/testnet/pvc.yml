@@ -3,7 +3,7 @@ kind: PersistentVolumeClaim
 metadata:
   name: casperparser-testnet-pg-volume
 spec:
-  storageClassName: manual
+  storageClassName: longhorn
   accessModes:
     - ReadWriteMany
   resources:

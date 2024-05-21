@@ -43,7 +43,7 @@ metadata:
     app: casperparser-era
   name: casperparser-era
 spec:
-  replicas: 1
+  replicas: 5
   selector:
     matchLabels:
       app: casperparser-era
@@ -59,7 +59,7 @@ spec:
         - name: casperparser-era
           image: killianh/casperparser:mainnet
           imagePullPolicy: Always
-          args: [ "worker", "-k", "1", "-q", "era,1" ]
+          args: [ "worker", "-k", "10", "-q", "era,1" ]
           resources: { }
           volumeMounts:
             - name: config-volume

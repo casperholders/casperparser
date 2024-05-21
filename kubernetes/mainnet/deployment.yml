@@ -132,7 +132,7 @@ spec:
     spec:
       containers:
         - name: postgrest
-          image: postgrest/postgrest:v8.0.0.20211102
+          image: postgrest/postgrest:latest
           ports:
             - containerPort: 3000
           imagePullPolicy: Always
@@ -162,7 +162,7 @@ spec:
     spec:
       containers:
         - name: postgrest-download
-          image: postgrest/postgrest:v8.0.0.20211102
+          image: postgrest/postgrest:latest
           ports:
             - containerPort: 3000
           imagePullPolicy: Always
@@ -192,7 +192,7 @@ spec:
     spec:
       containers:
         - name: casperparser-db
-          image: postgres:15
+          image: postgres:16
           ports:
             - containerPort: 5432
           env:

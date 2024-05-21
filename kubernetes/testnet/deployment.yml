@@ -132,7 +132,7 @@ spec:
     spec:
       containers:
         - name: postgrest-testnet
-          image: postgrest/postgrest:v8.0.0.20211102
+          image: postgrest/postgrest:latest
           ports:
             - containerPort: 3000
           imagePullPolicy: Always
@@ -162,7 +162,7 @@ spec:
     spec:
       containers:
         - name: postgrest-download-testnet
-          image: postgrest/postgrest:v8.0.0.20211102
+          image: postgrest/postgrest:latest
           ports:
             - containerPort: 3000
           imagePullPolicy: Always
